@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Activity, BarChart3, CalendarDays, Gauge, History, RotateCcw, Trophy, Zap } from 'lucide-react';
 import { BottomStatBar, BuildDeck, CrisisActionPanel, GameHud } from './components/GameChrome';
+import { GameWindow, WindowDock, type GameWindowKind } from './components/GameWindow';
 import { GuidedDemo } from './components/GuidedDemo';
 import { MetricsGrid } from './components/MetricsGrid';
 import { DemoCueCard, EventToast, ReportCardPreview, VisualStatusStrip } from './components/Phase6Visuals';
@@ -50,6 +51,7 @@ export default function App() {
   const [yearRecords, setYearRecords] = useState<YearRecord[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [demoStep, setDemoStep] = useState(0);
+  const [activeWindow, setActiveWindow] = useState<GameWindowKind>(null);
   const metrics = useMemo(() => simulate(state), [state]);
   const advisorMessage = useMemo(() => buildAdvisorMessage(state, metrics), [state, metrics]);
   const latestRun = scenarioRuns.find((run) => run.id === latestRunId);
@@ -61,22 +63,26 @@ export default function App() {
   const nextYear = () => { if (isFinished) return; const event = scenarios[(year + yearRecords.length * 3) % scenarios.length]; setState((current) => { const before = simulate(current); const baselineGrowth = applyPatch(current, { evAdoption: 3, industry: 2, airConditioning: 2, heatwave: -12, drought: -10, windDrought: -10 }); const nextState = clampEnergyState({ ...baselineGrowth, ...event.patch }); const after = simulate(nextState); const run: ScenarioRun = { id: Date.now(), scenario: event, before, after }; setScenarioRuns((runs) => [run, ...runs].slice(0, 6)); setLatestRunId(run.id); setYearRecords((records) => [{ year, metrics: after, event, investments: turnInvestments, budget }, ...records]); return nextState; }); setTurnInvestments([]); setBudget((current) => current + ANNUAL_BUDGET); if (year >= END_YEAR) setIsFinished(true); else setYear((current) => current + 1); };
   const applyCountryPreset = (preset: CountryPreset) => { setState(applyPresetState(preset)); setLatestRunId(undefined); };
   const restart = () => { setState(initialState); setScenarioRuns([]); setLatestRunId(undefined); setYear(START_YEAR); setBudget(START_BUDGET); setTurnInvestments([]); setYearRecords([]); setIsFinished(false); setDemoStep(0); };
-  const resetAll = () => { setState(initialState); setLatestRunId(undefined); };
   const startDemo = () => { setDemoStep(0); applyCountryPreset(countryPresets[0]); };
-  const nextDemoStep = () => { const next = (demoStep + 1) % 4; setDemoStep(next); if (next === 0) applyCountryPreset(countryPresets[0]); if (next === 1) applyScenario(scenarios[0]); if (next === 2) invest(investments.find((investment) => investment.id === 'batteries') ?? investments[0]); if (next === 3) document.getElementById('scenario-export-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const nextDemoStep = () => { const next = (demoStep + 1) % 4; setDemoStep(next); if (next === 0) applyCountryPreset(countryPresets[0]); if (next === 1) applyScenario(scenarios[0]); if (next === 2) invest(investments.find((investment) => investment.id === 'batteries') ?? investments[0]); if (next === 3) setActiveWindow('export'); };
 
   return (
     <main className="app-shell game-screen">
       <EventToast latestEventName={latestEventName} latestEventIcon={latestEventIcon} />
       <GameHud year={year} budget={budget} metrics={metrics} />
+      <WindowDock openWindow={setActiveWindow} />
       <div id="scenario-export-card" className="export-target"><VisualStatusStrip metrics={metrics} year={year} latestEventName={latestEventName} /></div>
       <div className="game-board">
         <aside className="left-command"><CrisisActionPanel latestEventName={latestEventName} metrics={metrics} onNextYear={nextYear} /><GuidedDemo currentStep={demoStep} onStart={startDemo} onNext={nextDemoStep} /><GamePanel year={year} budget={budget} selected={turnInvestments} finalMetrics={metrics} isFinished={isFinished} onInvest={invest} onNextYear={nextYear} onRestart={restart} /></aside>
         <section className="center-playfield"><GridMap metrics={metrics} /><BuildDeck budget={budget} onInvest={invest} /><BottomStatBar metrics={metrics} /></section>
-        <aside className="right-command"><section className="panel scenarios-panel"><p className="eyebrow">Scenario mode</p><h2>Crisis cards</h2><p className="muted">Trigger crises manually or use the annual loop.</p><div className="scenario-list">{scenarios.map((scenario) => <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}><span className="scenario-icon">{scenario.icon}</span><strong>{scenario.name}</strong><small>{scenario.category} · {scenario.severity}</small><em>{scenario.description}</em></button>)}</div></section><BenchmarkPanel metrics={metrics} /><ReportCardPreview metrics={metrics} /><ExportPanel targetId="scenario-export-card" /></aside>
+        <aside className="right-command"><section className="panel scenarios-panel"><p className="eyebrow">Scenario mode</p><h2>Crisis cards</h2><p className="muted">Trigger crises manually or use the annual loop.</p><div className="scenario-list">{scenarios.map((scenario) => <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}><span className="scenario-icon">{scenario.icon}</span><strong>{scenario.name}</strong><small>{scenario.category} · {scenario.severity}</small><em>{scenario.description}</em></button>)}</div></section><BenchmarkPanel metrics={metrics} /><ReportCardPreview metrics={metrics} /></aside>
       </div>
-      <details className="advanced-sim"><summary>Advanced simulator controls</summary><div className="advanced-grid"><MetricsGrid metrics={metrics} /><PresetPanel onApply={applyCountryPreset} /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /><section className="panel advisor"><div className="advisor-title"><Activity /><div><p className="eyebrow">Chief Energy Advisor</p><h2>Situation report</h2></div></div><p>{advisorMessage}</p></section><ScenarioImpact run={latestRun} /><Breakdown metrics={metrics} /><YearTimeline records={yearRecords} /><ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} /><DemoCueCard /></div></details>
-      <footer className="footer-note"><Zap size={16} /> Game UI pass: HUD, crisis window, build cards, playfield, bottom stats.</footer>
+      {activeWindow === 'advisor' && <GameWindow title="Chief Energy Advisor" subtitle="Strategic recommendation" onClose={() => setActiveWindow(null)}><section className="panel advisor"><div className="advisor-title"><Activity /><div><p className="eyebrow">Advisor terminal</p><h2>Situation report</h2></div></div><p>{advisorMessage}</p></section><ScenarioImpact run={latestRun} /></GameWindow>}
+      {activeWindow === 'metrics' && <GameWindow title="System Metrics" subtitle="Detailed grid telemetry" onClose={() => setActiveWindow(null)}><MetricsGrid metrics={metrics} /><Breakdown metrics={metrics} /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /></GameWindow>}
+      {activeWindow === 'presets' && <GameWindow title="Country Presets" subtitle="Real-world inspired baselines" onClose={() => setActiveWindow(null)}><PresetPanel onApply={applyCountryPreset} /></GameWindow>}
+      {activeWindow === 'history' && <GameWindow title="Timeline & Scenario History" subtitle="Previous turns and crisis impacts" onClose={() => setActiveWindow(null)}><YearTimeline records={yearRecords} /><ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} /></GameWindow>}
+      {activeWindow === 'export' && <GameWindow title="Export Scenario" subtitle="Create a judge-ready image" onClose={() => setActiveWindow(null)}><ExportPanel targetId="scenario-export-card" /><DemoCueCard /></GameWindow>}
+      <footer className="footer-note"><Zap size={16} /> Window modals added: Advisor, Metrics, Presets, History, Export.</footer>
     </main>
   );
 }
