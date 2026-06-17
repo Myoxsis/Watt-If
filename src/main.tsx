@@ -9,6 +9,7 @@ import './ux-polish.css';
 import './demo-refactor.css';
 import './game-theme.css';
 import './arcade-game-ui.css';
+import './window-modals.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
