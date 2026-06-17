@@ -15,6 +15,21 @@ You play the role of a Minister of Energy and stress-test a national grid agains
 - Stylized grid map
 - Chief Energy Advisor explanations
 
+## Phase 2 Simulation Engine
+
+The simulator now models:
+
+- Supply vs. average demand and peak demand
+- Renewable intermittency from heatwaves, drought, and wind droughts
+- Battery discharge during peak stress
+- Reserve margin above or below peak load
+- Unserved energy when demand exceeds supply
+- Renewable share and storage coverage
+- Scarcity-based electricity price
+- Weighted carbon intensity
+- Public approval and overall grid score
+- Production breakdown by source
+
 ## Run locally
 
 ```bash
@@ -32,8 +47,9 @@ npm run build
 
 ## Next roadmap items
 
-1. Add yearly turns from 2026 to 2040
-2. Add budget and investment choices
-3. Add final report card
-4. Add real-world country presets
-5. Add an LLM-powered scenario generator
+1. Add scenario mode with named crisis cards and comparison history
+2. Add yearly turns from 2026 to 2040
+3. Add budget and investment choices
+4. Add final report card
+5. Add real-world country presets
+6. Add an LLM-powered scenario generator
