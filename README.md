@@ -30,6 +30,17 @@ The simulator now models:
 - Public approval and overall grid score
 - Production breakdown by source
 
+## Phase 3 Scenario Mode
+
+Scenario mode adds:
+
+- Rich crisis cards with category, severity, and narrative
+- Before/after metric comparisons after each scenario
+- Scenario impact panel with score, reliability, blackout risk, carbon, and price deltas
+- Run history for the last six scenarios
+- Best-score and highest-risk highlights
+- Additional scenarios: Data Center Boom and Drought Summer
+
 ## Run locally
 
 ```bash
@@ -47,9 +58,8 @@ npm run build
 
 ## Next roadmap items
 
-1. Add scenario mode with named crisis cards and comparison history
-2. Add yearly turns from 2026 to 2040
-3. Add budget and investment choices
-4. Add final report card
-5. Add real-world country presets
-6. Add an LLM-powered scenario generator
+1. Add yearly turns from 2026 to 2040
+2. Add budget and investment choices
+3. Add final report card
+4. Add real-world country presets
+5. Add an LLM-powered scenario generator
