@@ -80,19 +80,27 @@ export function BenchmarkPanel({ metrics }: { metrics: Metrics }) {
 export function ExportPanel({ targetId }: { targetId: string }) {
   const exportImage = async () => {
     const target = document.getElementById(targetId);
-    if (!target) return;
+    if (!target) {
+      window.alert('Export target was not found. Try refreshing the app.');
+      return;
+    }
 
-    const dataUrl = await toPng(target, {
-      cacheBust: true,
-      pixelRatio: 2,
-      backgroundColor: '#070b16',
-      filter: (node) => !(node instanceof HTMLElement && node.classList.contains('event-toast')),
-    });
+    try {
+      const dataUrl = await toPng(target, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#070b16',
+        filter: (node) => !(node instanceof HTMLElement && node.classList.contains('event-toast')),
+      });
 
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = 'watt-if-scenario.png';
-    link.click();
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'watt-if-scenario.png';
+      link.click();
+    } catch (error) {
+      console.error('Failed to export scenario image', error);
+      window.alert('The scenario image could not be exported. Try closing modals and exporting again.');
+    }
   };
 
   return (
