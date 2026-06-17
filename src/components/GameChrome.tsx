@@ -63,7 +63,7 @@ export function BottomStatBar({ metrics }: { metrics: Metrics }) {
   return (
     <section className="bottom-stat-bar">
       <div><span>CO2 intensity</span><strong>{metrics.carbon}</strong><small>gCO2/kWh</small></div>
-      <div><span>Unserved energy</span><strong>{metrics.unservedEnergy}%</strong><small>peak stress</small></div>
+      <div><span>Unserved energy</span><strong>{metrics.unservedEnergy}</strong><small>GW at peak</small></div>
       <div><span>Electricity price</span><strong>EUR {metrics.price.toFixed(2)}</strong><small>/kWh</small></div>
       <div><span>Renewable share</span><strong>{metrics.renewableShare}%</strong><small>current mix</small></div>
       <div><span>Reliability</span><strong>{metrics.reliability}%</strong><small>grid health</small></div>
