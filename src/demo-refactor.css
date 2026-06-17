@@ -1,0 +1,45 @@
+.guided-demo-panel {
+  display: grid;
+  gap: 14px;
+  border-color: rgba(94, 234, 212, 0.36);
+  background:
+    radial-gradient(circle at top left, rgba(94, 234, 212, 0.14), transparent 12rem),
+    rgba(15, 23, 42, 0.78);
+}
+
+.demo-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.demo-progress span {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.demo-progress span.active {
+  background: linear-gradient(90deg, #67e8f9, #5eead4);
+  box-shadow: 0 0 18px rgba(94, 234, 212, 0.28);
+}
+
+.demo-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.preset-card em {
+  grid-column: 2;
+  color: #818cf8;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-style: normal;
+}
+
+@media (max-width: 760px) {
+  .preset-card em {
+    grid-column: 1 / -1;
+  }
+}
