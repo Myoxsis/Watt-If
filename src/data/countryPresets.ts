@@ -5,6 +5,8 @@ export type CountryPreset = {
   name: string;
   flag: string;
   description: string;
+  sourceNote: string;
+  sourceUrl: string;
   state: EnergyState;
 };
 
@@ -12,8 +14,10 @@ export const countryPresets: CountryPreset[] = [
   {
     id: 'france',
     name: 'France',
-    flag: '🇫🇷',
-    description: 'Nuclear-heavy, reliable, low-carbon baseline with moderate renewables.',
+    flag: 'FR',
+    description: 'Nuclear-heavy, reliable, low-carbon baseline with moderate hydro, wind, and solar.',
+    sourceNote: 'Inspired by IEA and Ember country electricity profiles: France is structurally nuclear-heavy and low-carbon.',
+    sourceUrl: 'https://ember-energy.org/data/electricity-data-explorer/',
     state: {
       nuclear: 82,
       solar: 28,
@@ -32,8 +36,10 @@ export const countryPresets: CountryPreset[] = [
   {
     id: 'germany',
     name: 'Germany',
-    flag: '🇩🇪',
-    description: 'Renewables-heavy industrial system with more gas backup and peak pressure.',
+    flag: 'DE',
+    description: 'Renewables-heavy industrial system with no nuclear and more fossil backup flexibility.',
+    sourceNote: 'Inspired by AGEB, Energy Institute, and Ember profiles showing high wind/solar share, no nuclear, and gas/coal backup.',
+    sourceUrl: 'https://ember-energy.org/data/electricity-data-explorer/',
     state: {
       nuclear: 0,
       solar: 78,
@@ -52,8 +58,10 @@ export const countryPresets: CountryPreset[] = [
   {
     id: 'sweden',
     name: 'Sweden',
-    flag: '🇸🇪',
-    description: 'Hydro, nuclear, and wind create a resilient low-carbon system.',
+    flag: 'SE',
+    description: 'Hydro, nuclear, and wind create a resilient low-carbon system with little fossil generation.',
+    sourceNote: 'Inspired by Energy Institute and national profiles: Sweden is dominated by hydro, nuclear, and wind.',
+    sourceUrl: 'https://ember-energy.org/data/electricity-data-explorer/',
     state: {
       nuclear: 42,
       solar: 14,
