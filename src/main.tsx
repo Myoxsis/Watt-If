@@ -6,6 +6,7 @@ import './phase4.css';
 import './phase6.css';
 import './phase7.css';
 import './ux-polish.css';
+import './demo-refactor.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
