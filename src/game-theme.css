@@ -1,0 +1,298 @@
+/* Strategy-game look and feel: command-center HUD, window chrome, and stronger play affordances. */
+:root {
+  --game-bg: #080b12;
+  --game-panel: rgba(13, 18, 30, 0.92);
+  --game-panel-2: rgba(20, 27, 43, 0.94);
+  --game-line: rgba(119, 246, 255, 0.22);
+  --game-line-hot: rgba(255, 184, 77, 0.5);
+  --game-green: #4dffb5;
+  --game-cyan: #69f7ff;
+  --game-gold: #ffcc66;
+  --game-red: #ff5d73;
+  --game-purple: #9b8cff;
+}
+
+body {
+  background:
+    linear-gradient(rgba(105, 247, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105, 247, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 20%, rgba(34, 211, 238, 0.12), transparent 34rem),
+    radial-gradient(circle at 80% 10%, rgba(255, 93, 115, 0.08), transparent 26rem),
+    var(--game-bg);
+  background-size: 34px 34px, 34px 34px, auto, auto, auto;
+}
+
+.app-shell {
+  width: min(1560px, 100%);
+}
+
+.event-toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - 32px));
+  border: 1px solid rgba(255, 93, 115, 0.55);
+  background:
+    linear-gradient(90deg, rgba(255, 93, 115, 0.28), rgba(255, 184, 77, 0.12)),
+    rgba(20, 8, 12, 0.94);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 18px 80px rgba(255, 93, 115, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+.hero {
+  margin-top: 58px;
+  border-radius: 18px;
+  border: 1px solid var(--game-line);
+  background:
+    linear-gradient(180deg, rgba(105, 247, 255, 0.1), transparent 46%),
+    linear-gradient(135deg, rgba(13, 18, 30, 0.96), rgba(7, 10, 18, 0.96));
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 0 60px rgba(105,247,255,.08);
+}
+
+.hero::before {
+  content: 'WATT-IF COMMAND OS // BUILD 2040';
+  position: absolute;
+  left: 18px;
+  top: -30px;
+  color: var(--game-cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.hero::after {
+  content: 'MINISTER DECK';
+  right: 26px;
+  bottom: 14px;
+  color: rgba(105, 247, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.hero h1 {
+  color: #f8fbff;
+  text-shadow: 0 0 34px rgba(105, 247, 255, 0.18);
+}
+
+.panel,
+.map-card,
+.metric,
+.visual-status-strip {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid rgba(105, 247, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent 42px),
+    var(--game-panel);
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.06),
+    inset 0 -1px rgba(0,0,0,.35),
+    0 16px 42px rgba(0,0,0,.32);
+}
+
+.panel::before,
+.map-card::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--game-green);
+  box-shadow: 16px 0 var(--game-gold), 32px 0 var(--game-red);
+  opacity: 0.9;
+}
+
+.panel h2,
+.map-card h2 {
+  padding-left: 50px;
+  color: #f7fbff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.eyebrow {
+  color: var(--game-cyan);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.visual-status-strip {
+  grid-template-columns: minmax(0, 1fr) 112px minmax(180px, auto);
+  border-color: rgba(255, 93, 115, 0.34);
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255, 93, 115, 0.16), transparent 18rem),
+    linear-gradient(90deg, rgba(13, 18, 30, 0.96), rgba(20, 16, 32, 0.96));
+}
+
+.visual-status-copy h2 {
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase;
+}
+
+.visual-status-kpis span,
+.game-stats span,
+.map-score,
+.status-pill {
+  border: 1px solid rgba(105,247,255,.18);
+  background: rgba(3, 7, 18, 0.72);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.metric {
+  min-height: 118px;
+  border-left: 3px solid rgba(105, 247, 255, 0.32);
+}
+
+.metric.good { border-left-color: var(--game-green); }
+.metric.warn { border-left-color: var(--game-gold); }
+.metric.bad { border-left-color: var(--game-red); }
+
+.metric strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dashboard {
+  align-items: start;
+}
+
+.controls-stack,
+.scenarios-panel {
+  background: rgba(3, 7, 18, 0.28);
+  border-radius: 18px;
+}
+
+.guided-demo-panel {
+  border-color: rgba(77, 255, 181, 0.36);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(77, 255, 181, 0.14), transparent 13rem),
+    var(--game-panel-2);
+}
+
+.demo-progress span {
+  height: 11px;
+  border: 1px solid rgba(105,247,255,.16);
+}
+
+.demo-progress span.active {
+  background: repeating-linear-gradient(135deg, var(--game-green), var(--game-green) 8px, var(--game-cyan) 8px, var(--game-cyan) 16px);
+}
+
+.next-year-button,
+.investment-card,
+.scenario-card,
+.preset-card {
+  border-radius: 10px;
+}
+
+.next-year-button {
+  min-height: 52px;
+  border-color: rgba(77, 255, 181, 0.45);
+  background:
+    linear-gradient(180deg, rgba(77,255,181,.22), rgba(0,0,0,.12)),
+    rgba(18, 72, 61, 0.72);
+  color: #efffff;
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 0 28px rgba(77,255,181,.12);
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.investment-card,
+.scenario-card,
+.preset-card {
+  border-color: rgba(105,247,255,.14);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), transparent),
+    rgba(3, 7, 18, 0.62);
+}
+
+.investment-card:hover:not(:disabled),
+.scenario-card:hover,
+.preset-card:hover {
+  border-color: rgba(105,247,255,.5);
+  background:
+    linear-gradient(90deg, rgba(105,247,255,.12), transparent),
+    rgba(8, 13, 24, 0.92);
+}
+
+.grid-map {
+  min-height: 620px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at center, rgba(105,247,255,.14), transparent 16rem),
+    linear-gradient(rgba(105,247,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105,247,255,.035) 1px, transparent 1px),
+    #07111c;
+  background-size: auto, 28px 28px, 28px 28px, auto;
+}
+
+.grid-map::before {
+  border-color: rgba(105,247,255,.24);
+  background: rgba(13, 18, 30, 0.48);
+}
+
+.plant {
+  border-radius: 10px;
+  border-color: rgba(105,247,255,.32);
+  background: rgba(3, 7, 18, 0.9);
+  box-shadow: 0 0 28px rgba(105,247,255,.12);
+}
+
+.city {
+  border-radius: 8px;
+  color: #080b12;
+  text-transform: uppercase;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+}
+
+.city.danger {
+  background: var(--game-red);
+  box-shadow: 0 0 42px rgba(255,93,115,.48);
+}
+
+.city.stressed {
+  background: var(--game-gold);
+}
+
+.city.stable {
+  background: var(--game-green);
+}
+
+.line {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--game-cyan), var(--game-green), transparent);
+  filter: drop-shadow(0 0 8px rgba(105,247,255,.5));
+}
+
+.scenarios-panel {
+  border-color: rgba(255, 93, 115, 0.22);
+}
+
+.scenario-card:first-of-type {
+  border-color: rgba(255, 93, 115, 0.45);
+}
+
+.report-card-preview,
+.benchmark-card,
+.history-card {
+  background: rgba(3, 7, 18, 0.66);
+}
+
+.grade-badge {
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.footer-note {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(216, 244, 255, 0.64);
+}
+
+@media (max-width: 920px) {
+  .hero { margin-top: 72px; }
+  .visual-status-strip { grid-template-columns: 1fr; }
+  .grid-map { min-height: 460px; }
+}
