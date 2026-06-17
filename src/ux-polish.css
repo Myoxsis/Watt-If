@@ -1,0 +1,379 @@
+/* UI/UX polish layer: improves clarity without changing gameplay logic. */
+:root {
+  --surface: rgba(15, 23, 42, 0.78);
+  --surface-strong: rgba(2, 6, 23, 0.62);
+  --border-soft: rgba(148, 163, 184, 0.22);
+  --border-bright: rgba(103, 232, 249, 0.4);
+  --text-muted: #9fb0c8;
+  --text-main: #f8fbff;
+  --accent: #67e8f9;
+  --accent-2: #5eead4;
+  --warning: #facc15;
+  --danger: #fb7185;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button,
+input[type='range'] {
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(103, 232, 249, 0.45);
+  outline-offset: 3px;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.app-shell {
+  padding: clamp(18px, 2.5vw, 36px);
+}
+
+.hero {
+  position: relative;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(103, 232, 249, 0.18), transparent 22rem),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.84), rgba(8, 47, 73, 0.42));
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.28);
+}
+
+.hero::after {
+  content: 'Minister mode';
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  color: rgba(219, 234, 254, 0.14);
+  font-size: clamp(2.2rem, 8vw, 7rem);
+  font-weight: 950;
+  letter-spacing: -0.08em;
+  pointer-events: none;
+}
+
+.hero h1 {
+  text-wrap: balance;
+}
+
+.hero p:not(.eyebrow) {
+  max-width: 700px;
+  margin-bottom: 0;
+}
+
+.reset-button,
+.ghost-button,
+.next-year-button {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.next-year-button {
+  letter-spacing: 0.01em;
+}
+
+.metrics-grid.phase-two {
+  grid-template-columns: repeat(10, minmax(110px, 1fr));
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.metric {
+  min-width: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.42));
+}
+
+.metric span {
+  display: block;
+  min-height: 2.2em;
+  font-size: 0.78rem;
+}
+
+.metric strong {
+  line-height: 1;
+}
+
+.dashboard {
+  grid-template-columns: minmax(300px, 340px) minmax(520px, 1fr) minmax(300px, 340px);
+  gap: 20px;
+}
+
+.controls-stack,
+.scenarios-panel {
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
+.panel,
+.map-card,
+.metric {
+  border-color: var(--border-soft);
+}
+
+.panel:hover,
+.map-card:hover,
+.metric:hover {
+  border-color: rgba(103, 232, 249, 0.28);
+}
+
+.panel h2,
+.map-card h2 {
+  letter-spacing: -0.02em;
+}
+
+.visual-status-strip {
+  margin-top: 14px;
+}
+
+.visual-status-kpis span,
+.game-stats span,
+.history-stats span,
+.report-rubric span,
+.benchmark-grid span {
+  white-space: nowrap;
+}
+
+.game-panel {
+  border-color: rgba(103, 232, 249, 0.38);
+  background:
+    radial-gradient(circle at top right, rgba(103, 232, 249, 0.12), transparent 15rem),
+    var(--surface);
+}
+
+.game-panel .advisor-title h2 {
+  font-size: 1.35rem;
+}
+
+.game-stats {
+  grid-template-columns: 1fr;
+}
+
+.game-stats span:first-child {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.investment-card,
+.scenario-card,
+.preset-card,
+.benchmark-card,
+.history-card {
+  min-height: 76px;
+}
+
+.investment-card strong,
+.scenario-card strong,
+.preset-card strong,
+.benchmark-card strong {
+  line-height: 1.15;
+}
+
+.investment-card small,
+.scenario-card small,
+.scenario-card em,
+.preset-card small,
+.benchmark-card small {
+  line-height: 1.4;
+}
+
+.investment-card:hover:not(:disabled),
+.scenario-card:hover,
+.preset-card:hover {
+  box-shadow: 0 14px 36px rgba(34, 211, 238, 0.12);
+}
+
+.grid-map {
+  min-height: 560px;
+}
+
+.map-score {
+  max-width: calc(100% - 36px);
+  flex-wrap: wrap;
+}
+
+.advisor {
+  border-color: rgba(103, 232, 249, 0.26);
+}
+
+.advisor p {
+  margin-bottom: 0;
+  font-size: 1.02rem;
+}
+
+.impact-grid,
+.report-rubric,
+.benchmark-grid,
+.history-stats {
+  gap: 10px;
+}
+
+.impact-grid div {
+  min-height: 74px;
+}
+
+.report-card-preview {
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.12), transparent 12rem),
+    var(--surface);
+}
+
+.grade-badge {
+  box-shadow: 0 18px 45px rgba(34, 211, 238, 0.18);
+}
+
+.scenarios-panel {
+  background:
+    radial-gradient(circle at top right, rgba(248, 113, 113, 0.1), transparent 14rem),
+    var(--surface);
+}
+
+.scenario-list,
+.investment-list,
+.preset-list,
+.benchmark-list,
+.history-list {
+  gap: 10px;
+}
+
+.scenario-card {
+  grid-template-columns: 34px 1fr;
+}
+
+.scenario-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.export-panel {
+  border-color: rgba(167, 139, 250, 0.38);
+}
+
+.footer-note {
+  width: 100%;
+  justify-content: center;
+  margin-top: 28px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  padding-top: 18px;
+}
+
+@media (max-width: 1280px) {
+  .dashboard {
+    grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  }
+
+  .scenarios-panel {
+    grid-column: 1 / -1;
+    position: static;
+    max-height: none;
+  }
+
+  .scenario-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .hero::after {
+    display: none;
+  }
+
+  .hero {
+    align-items: flex-start;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-stack {
+    position: static;
+    max-height: none;
+    order: 2;
+  }
+
+  .main-stage {
+    order: 1;
+  }
+
+  .scenarios-panel {
+    order: 3;
+  }
+
+  .metrics-grid.phase-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .metric span {
+    min-height: auto;
+  }
+
+  .scenario-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .hero {
+    border-radius: 24px;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+  }
+
+  .metrics-grid.phase-two,
+  .impact-grid,
+  .report-rubric,
+  .benchmark-grid,
+  .history-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-map {
+    min-height: 430px;
+  }
+
+  .visual-status-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
