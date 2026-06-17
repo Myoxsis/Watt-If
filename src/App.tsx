@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Activity, BatteryCharging, Factory, Flame, Gauge, RotateCcw, Zap } from 'lucide-react';
+import { Activity, BarChart3, Gauge, RotateCcw, Zap } from 'lucide-react';
 import { scenarios } from './data/scenarios';
-import { buildAdvisorMessage, initialState, simulate, type EnergyState } from './lib/simulator';
+import { buildAdvisorMessage, initialState, simulate, type EnergyState, type Metrics } from './lib/simulator';
 
 const productionControls: Array<{ key: keyof EnergyState; label: string; icon: string }> = [
   { key: 'nuclear', label: 'Nuclear', icon: '⚛️' },
@@ -23,6 +23,11 @@ const eventControls: Array<{ key: keyof EnergyState; label: string; icon: string
   { key: 'drought', label: 'Drought', icon: '🏜️' },
   { key: 'windDrought', label: 'Wind drought', icon: '🌀' },
 ];
+
+function tone(value: number, good: number, warn: number, direction: 'higher' | 'lower' = 'higher') {
+  if (direction === 'higher') return value >= good ? 'good' : value >= warn ? 'warn' : 'bad';
+  return value <= good ? 'good' : value <= warn ? 'warn' : 'bad';
+}
 
 function SliderGroup({
   title,
@@ -70,8 +75,8 @@ function MetricCard({ label, value, detail, tone }: { label: string; value: stri
   );
 }
 
-function GridMap({ status, reliability }: { status: string; reliability: number }) {
-  const cityClass = status === 'Stable' ? 'city stable' : status === 'Stressed' ? 'city stressed' : 'city danger';
+function GridMap({ metrics }: { metrics: Metrics }) {
+  const cityClass = metrics.status === 'Stable' ? 'city stable' : metrics.status === 'Stressed' ? 'city stressed' : 'city danger';
 
   return (
     <section className="map-card">
@@ -80,7 +85,7 @@ function GridMap({ status, reliability }: { status: string; reliability: number 
           <p className="eyebrow">Live grid map</p>
           <h2>France energy system</h2>
         </div>
-        <span className={`status-pill ${status === 'Stable' ? 'good' : status === 'Stressed' ? 'warn' : 'bad'}`}>{status}</span>
+        <span className={`status-pill ${metrics.status === 'Stable' ? 'good' : metrics.status === 'Stressed' ? 'warn' : 'bad'}`}>{metrics.status}</span>
       </div>
 
       <div className="grid-map" aria-label="Stylized country grid map">
@@ -97,8 +102,36 @@ function GridMap({ status, reliability }: { status: string; reliability: number 
         <div className={`${cityClass} marseille`}>Marseille</div>
         <div className="map-score">
           <Gauge size={18} />
-          {reliability}% reliability
+          {metrics.reliability}% reliability · {metrics.reserveMargin}% reserve
         </div>
+      </div>
+    </section>
+  );
+}
+
+function Breakdown({ metrics }: { metrics: Metrics }) {
+  const entries = Object.entries(metrics.production) as Array<[keyof Metrics['production'], number]>;
+  const max = Math.max(...entries.map(([, value]) => value), 1);
+
+  return (
+    <section className="panel breakdown">
+      <div className="advisor-title">
+        <BarChart3 />
+        <div>
+          <p className="eyebrow">Phase 2 model</p>
+          <h2>Production breakdown</h2>
+        </div>
+      </div>
+      <div className="bars">
+        {entries.map(([name, value]) => (
+          <div className="bar-row" key={name}>
+            <span>{name}</span>
+            <div className="bar-track">
+              <div className="bar-fill" style={{ width: `${Math.max(5, (value / max) * 100)}%` }} />
+            </div>
+            <strong>{value} GW</strong>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -120,8 +153,8 @@ export default function App() {
           <p className="eyebrow">Hackathon energy simulator</p>
           <h1>Watt-If?</h1>
           <p>
-            Become the Minister of Energy. Stress-test a national grid against heatwaves, wind droughts,
-            EV growth, nuclear outages, and gas shocks.
+            Become the Minister of Energy. Stress-test a national grid against peak demand, renewable intermittency,
+            storage limits, heatwaves, wind droughts, EV growth, nuclear outages, and gas shocks.
           </p>
         </div>
         <button className="reset-button" onClick={() => setState(initialState)}>
@@ -129,12 +162,17 @@ export default function App() {
         </button>
       </header>
 
-      <section className="metrics-grid">
-        <MetricCard label="Reliability" value={`${metrics.reliability}%`} detail={`${metrics.supply} GW supply / ${metrics.demand} GW demand`} tone={metrics.reliability > 94 ? 'good' : metrics.reliability > 82 ? 'warn' : 'bad'} />
-        <MetricCard label="Blackout risk" value={`${metrics.blackoutRisk}%`} detail="Probability under current stress" tone={metrics.blackoutRisk < 10 ? 'good' : metrics.blackoutRisk < 35 ? 'warn' : 'bad'} />
-        <MetricCard label="Carbon intensity" value={`${metrics.carbon} gCO₂/kWh`} detail="Weighted by energy mix" tone={metrics.carbon < 120 ? 'good' : metrics.carbon < 220 ? 'warn' : 'bad'} />
-        <MetricCard label="Electricity price" value={`€${metrics.price.toFixed(2)}/kWh`} detail="Includes scarcity penalty" tone={metrics.price < 0.22 ? 'good' : metrics.price < 0.34 ? 'warn' : 'bad'} />
-        <MetricCard label="Public approval" value={`${metrics.approval}%`} detail="Citizens reward clean, cheap reliability" tone={metrics.approval > 70 ? 'good' : metrics.approval > 45 ? 'warn' : 'bad'} />
+      <section className="metrics-grid phase-two">
+        <MetricCard label="Grid score" value={`${metrics.score}/100`} detail="Reliability + carbon + price + approval" tone={tone(metrics.score, 76, 54)} />
+        <MetricCard label="Reliability" value={`${metrics.reliability}%`} detail={`${metrics.supply} GW supply / ${metrics.peakDemand} GW peak`} tone={tone(metrics.reliability, 94, 80)} />
+        <MetricCard label="Reserve margin" value={`${metrics.reserveMargin}%`} detail="Extra capacity above peak load" tone={tone(metrics.reserveMargin, 10, 0)} />
+        <MetricCard label="Unserved energy" value={`${metrics.unservedEnergy} GW`} detail="Demand not covered at peak" tone={tone(metrics.unservedEnergy, 0, 8, 'lower')} />
+        <MetricCard label="Renewable share" value={`${metrics.renewableShare}%`} detail={`${metrics.renewableSupply} GW renewable output`} tone={tone(metrics.renewableShare, 55, 30)} />
+        <MetricCard label="Storage coverage" value={`${metrics.storageCoverage}%`} detail="Battery support during peak stress" tone={tone(metrics.storageCoverage, 65, 30)} />
+        <MetricCard label="Blackout risk" value={`${metrics.blackoutRisk}%`} detail="Probability under current stress" tone={tone(metrics.blackoutRisk, 10, 35, 'lower')} />
+        <MetricCard label="Carbon intensity" value={`${metrics.carbon} gCO₂/kWh`} detail="Weighted by energy mix" tone={tone(metrics.carbon, 120, 220, 'lower')} />
+        <MetricCard label="Electricity price" value={`€${metrics.price.toFixed(2)}/kWh`} detail="Includes scarcity penalty" tone={tone(metrics.price, 0.22, 0.34, 'lower')} />
+        <MetricCard label="Public approval" value={`${metrics.approval}%`} detail="Citizens reward clean, cheap reliability" tone={tone(metrics.approval, 70, 45)} />
       </section>
 
       <div className="dashboard">
@@ -145,7 +183,7 @@ export default function App() {
         </aside>
 
         <div className="main-stage">
-          <GridMap status={metrics.status} reliability={metrics.reliability} />
+          <GridMap metrics={metrics} />
 
           <section className="panel advisor">
             <div className="advisor-title">
@@ -157,6 +195,8 @@ export default function App() {
             </div>
             <p>{advisorMessage}</p>
           </section>
+
+          <Breakdown metrics={metrics} />
         </div>
 
         <aside className="panel scenarios-panel">
@@ -175,7 +215,7 @@ export default function App() {
       </div>
 
       <footer className="footer-note">
-        <Zap size={16} /> Phase 1 MVP: sliders, scenarios, live metrics, map, and advisor logic. Next: yearly turns and budget gameplay.
+        <Zap size={16} /> Phase 2: richer supply-demand engine, intermittency, storage support, peak stress, blackout risk, and grid scoring.
       </footer>
     </main>
   );
