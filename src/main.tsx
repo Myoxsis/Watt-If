@@ -7,6 +7,7 @@ import './phase6.css';
 import './phase7.css';
 import './ux-polish.css';
 import './demo-refactor.css';
+import './game-theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
