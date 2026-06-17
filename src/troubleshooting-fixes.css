@@ -1,0 +1,33 @@
+/* Review fixes: keep the export target renderable while hidden from the game board. */
+.game-screen .export-target {
+  position: fixed;
+  left: -12000px;
+  top: 0;
+  width: 1120px;
+  min-height: 240px;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.game-screen .export-target .visual-status-strip {
+  display: grid;
+  margin: 0;
+}
+
+.game-screen .export-target .metrics-grid.phase-two {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.game-modal-body .export-target {
+  position: static;
+  width: auto;
+  min-height: 0;
+}
+
+/* Prevent the fixed export capture node from creating accidental horizontal scroll. */
+html,
+body {
+  max-width: 100%;
+}
