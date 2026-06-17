@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Activity, BarChart3, CalendarDays, Gauge, History, RotateCcw, Trophy, Zap } from 'lucide-react';
+import { DemoCueCard, EventToast, ReportCardPreview, VisualStatusStrip } from './components/Phase6Visuals';
 import { investments, type Investment } from './data/investments';
 import { scenarios, type Scenario } from './data/scenarios';
 import { buildAdvisorMessage, initialState, simulate, type EnergyState, type Metrics } from './lib/simulator';
@@ -30,20 +31,8 @@ const eventControls: Array<{ key: keyof EnergyState; label: string; icon: string
   { key: 'windDrought', label: 'Wind drought', icon: '🌀' },
 ];
 
-type ScenarioRun = {
-  id: number;
-  scenario: Scenario;
-  before: Metrics;
-  after: Metrics;
-};
-
-type YearRecord = {
-  year: number;
-  metrics: Metrics;
-  event?: Scenario;
-  investments: string[];
-  budget: number;
-};
+type ScenarioRun = { id: number; scenario: Scenario; before: Metrics; after: Metrics };
+type YearRecord = { year: number; metrics: Metrics; event?: Scenario; investments: string[]; budget: number };
 
 function tone(value: number, good: number, warn: number, direction: 'higher' | 'lower' = 'higher') {
   if (direction === 'higher') return value >= good ? 'good' : value >= warn ? 'warn' : 'bad';
@@ -62,9 +51,7 @@ function deltaClass(value: number, direction: 'higher' | 'lower' = 'higher') {
 }
 
 function clampEnergyState(state: EnergyState): EnergyState {
-  return Object.fromEntries(
-    Object.entries(state).map(([key, value]) => [key, Math.min(100, Math.max(0, value))]),
-  ) as EnergyState;
+  return Object.fromEntries(Object.entries(state).map(([key, value]) => [key, Math.min(100, Math.max(0, value))])) as EnergyState;
 }
 
 function applyPatch(state: EnergyState, patch: Partial<EnergyState>) {
@@ -75,146 +62,48 @@ function applyPatch(state: EnergyState, patch: Partial<EnergyState>) {
   return next;
 }
 
-function SliderGroup({
-  title,
-  controls,
-  state,
-  onChange,
-}: {
-  title: string;
-  controls: Array<{ key: keyof EnergyState; label: string; icon: string }>;
-  state: EnergyState;
-  onChange: (key: keyof EnergyState, value: number) => void;
-}) {
-  return (
-    <section className="panel">
-      <h2>{title}</h2>
-      <div className="sliders">
-        {controls.map((control) => (
-          <label className="slider-row" key={control.key}>
-            <span className="slider-label"><span>{control.icon}</span>{control.label}</span>
-            <strong>{state[control.key]}</strong>
-            <input type="range" min="0" max="100" value={state[control.key]} onChange={(event) => onChange(control.key, Number(event.target.value))} />
-          </label>
-        ))}
-      </div>
-    </section>
-  );
+function SliderGroup({ title, controls, state, onChange }: { title: string; controls: Array<{ key: keyof EnergyState; label: string; icon: string }>; state: EnergyState; onChange: (key: keyof EnergyState, value: number) => void }) {
+  return <section className="panel"><h2>{title}</h2><div className="sliders">{controls.map((control) => <label className="slider-row" key={control.key}><span className="slider-label"><span>{control.icon}</span>{control.label}</span><strong>{state[control.key]}</strong><input type="range" min="0" max="100" value={state[control.key]} onChange={(event) => onChange(control.key, Number(event.target.value))} /></label>)}</div></section>;
 }
 
 function MetricCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone?: string }) {
-  return (
-    <article className={`metric ${tone ?? ''}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
-  );
+  return <article className={`metric ${tone ?? ''}`}><span>{label}</span><strong>{value}</strong><small>{detail}</small></article>;
 }
 
 function GridMap({ metrics }: { metrics: Metrics }) {
   const cityClass = metrics.status === 'Stable' ? 'city stable' : metrics.status === 'Stressed' ? 'city stressed' : 'city danger';
-  return (
-    <section className="map-card">
-      <div className="map-header">
-        <div><p className="eyebrow">Live grid map</p><h2>France energy system</h2></div>
-        <span className={`status-pill ${metrics.status === 'Stable' ? 'good' : metrics.status === 'Stressed' ? 'warn' : 'bad'}`}>{metrics.status}</span>
-      </div>
-      <div className="grid-map" aria-label="Stylized country grid map">
-        <div className="plant nuclear">⚛️</div><div className="plant solar">☀️</div><div className="plant wind">💨</div><div className="plant hydro">💧</div>
-        <div className="line l1" /><div className="line l2" /><div className="line l3" /><div className="line l4" />
-        <div className={`${cityClass} paris`}>Paris</div><div className={`${cityClass} lyon`}>Lyon</div><div className={`${cityClass} marseille`}>Marseille</div>
-        <div className="map-score"><Gauge size={18} />{metrics.reliability}% reliability · {metrics.reserveMargin}% reserve</div>
-      </div>
-    </section>
-  );
+  return <section className="map-card"><div className="map-header"><div><p className="eyebrow">Live grid map</p><h2>France energy system</h2></div><span className={`status-pill ${metrics.status === 'Stable' ? 'good' : metrics.status === 'Stressed' ? 'warn' : 'bad'}`}>{metrics.status}</span></div><div className="grid-map" aria-label="Stylized country grid map"><div className="plant nuclear">⚛️</div><div className="plant solar">☀️</div><div className="plant wind">💨</div><div className="plant hydro">💧</div><div className="line l1" /><div className="line l2" /><div className="line l3" /><div className="line l4" /><div className={`${cityClass} paris`}>Paris</div><div className={`${cityClass} lyon`}>Lyon</div><div className={`${cityClass} marseille`}>Marseille</div><div className="map-score"><Gauge size={18} />{metrics.reliability}% reliability · {metrics.reserveMargin}% reserve</div></div></section>;
 }
 
 function Breakdown({ metrics }: { metrics: Metrics }) {
   const entries = Object.entries(metrics.production) as Array<[keyof Metrics['production'], number]>;
   const max = Math.max(...entries.map(([, value]) => value), 1);
-  return (
-    <section className="panel breakdown">
-      <div className="advisor-title"><BarChart3 /><div><p className="eyebrow">Phase 2 model</p><h2>Production breakdown</h2></div></div>
-      <div className="bars">
-        {entries.map(([name, value]) => (
-          <div className="bar-row" key={name}><span>{name}</span><div className="bar-track"><div className="bar-fill" style={{ width: `${Math.max(5, (value / max) * 100)}%` }} /></div><strong>{value} GW</strong></div>
-        ))}
-      </div>
-    </section>
-  );
+  return <section className="panel breakdown"><div className="advisor-title"><BarChart3 /><div><p className="eyebrow">Phase 2 model</p><h2>Production breakdown</h2></div></div><div className="bars">{entries.map(([name, value]) => <div className="bar-row" key={name}><span>{name}</span><div className="bar-track"><div className="bar-fill" style={{ width: `${Math.max(5, (value / max) * 100)}%` }} /></div><strong>{value} GW</strong></div>)}</div></section>;
 }
 
 function ScenarioImpact({ run }: { run?: ScenarioRun }) {
-  if (!run) {
-    return <section className="panel impact-panel empty-impact"><p className="eyebrow">Phase 3 scenario mode</p><h2>Scenario impact</h2><p className="muted">Pick a scenario to compare the grid before and after the crisis.</p></section>;
-  }
+  if (!run) return <section className="panel impact-panel empty-impact"><p className="eyebrow">Phase 3 scenario mode</p><h2>Scenario impact</h2><p className="muted">Pick a scenario to compare the grid before and after the crisis.</p></section>;
   const scoreDelta = run.after.score - run.before.score;
   const reliabilityDelta = run.after.reliability - run.before.reliability;
   const blackoutDelta = run.after.blackoutRisk - run.before.blackoutRisk;
   const carbonDelta = run.after.carbon - run.before.carbon;
   const priceDelta = Math.round((run.after.price - run.before.price) * 100) / 100;
-  return (
-    <section className="panel impact-panel">
-      <p className="eyebrow">Latest scenario impact</p><h2>{run.scenario.icon} {run.scenario.name}</h2><p className="scenario-narrative">{run.scenario.narrative}</p>
-      <div className="impact-grid">
-        <div><span>Score</span><strong className={deltaClass(scoreDelta)}>{signed(scoreDelta)}</strong></div>
-        <div><span>Reliability</span><strong className={deltaClass(reliabilityDelta)}>{signed(reliabilityDelta, '%')}</strong></div>
-        <div><span>Blackout risk</span><strong className={deltaClass(blackoutDelta, 'lower')}>{signed(blackoutDelta, '%')}</strong></div>
-        <div><span>Carbon</span><strong className={deltaClass(carbonDelta, 'lower')}>{signed(carbonDelta, ' g')}</strong></div>
-        <div><span>Price</span><strong className={deltaClass(priceDelta, 'lower')}>{signed(priceDelta, '€/kWh')}</strong></div>
-      </div>
-    </section>
-  );
+  return <section className="panel impact-panel"><p className="eyebrow">Latest scenario impact</p><h2>{run.scenario.icon} {run.scenario.name}</h2><p className="scenario-narrative">{run.scenario.narrative}</p><div className="impact-grid"><div><span>Score</span><strong className={deltaClass(scoreDelta)}>{signed(scoreDelta)}</strong></div><div><span>Reliability</span><strong className={deltaClass(reliabilityDelta)}>{signed(reliabilityDelta, '%')}</strong></div><div><span>Blackout risk</span><strong className={deltaClass(blackoutDelta, 'lower')}>{signed(blackoutDelta, '%')}</strong></div><div><span>Carbon</span><strong className={deltaClass(carbonDelta, 'lower')}>{signed(carbonDelta, ' g')}</strong></div><div><span>Price</span><strong className={deltaClass(priceDelta, 'lower')}>{signed(priceDelta, '€/kWh')}</strong></div></div></section>;
 }
 
 function ScenarioHistory({ runs, onClear }: { runs: ScenarioRun[]; onClear: () => void }) {
   const bestRun = runs.reduce<ScenarioRun | undefined>((best, run) => (!best || run.after.score > best.after.score ? run : best), undefined);
   const worstRun = runs.reduce<ScenarioRun | undefined>((worst, run) => (!worst || run.after.blackoutRisk > worst.after.blackoutRisk ? run : worst), undefined);
-  return (
-    <section className="panel history-panel">
-      <div className="history-header"><div className="advisor-title"><History /><div><p className="eyebrow">Scenario history</p><h2>Compare crisis runs</h2></div></div>{runs.length > 0 && <button className="ghost-button" onClick={onClear}>Clear</button>}</div>
-      {runs.length === 0 ? <p className="muted">No scenario runs yet. Apply a disaster card to start building a comparison table.</p> : <><div className="scenario-awards">{bestRun && <span>🏆 Best score: {bestRun.scenario.name} ({bestRun.after.score})</span>}{worstRun && <span>🚨 Highest risk: {worstRun.scenario.name} ({worstRun.after.blackoutRisk}%)</span>}</div><div className="history-list">{runs.map((run) => <article className="history-card" key={run.id}><strong>{run.scenario.icon} {run.scenario.name}</strong><small>{run.scenario.category} · {run.scenario.severity}</small><div className="history-stats"><span>Score {run.before.score} → {run.after.score}</span><span>Risk {run.before.blackoutRisk}% → {run.after.blackoutRisk}%</span><span>CO₂ {run.before.carbon} → {run.after.carbon}</span></div></article>)}</div></>}
-    </section>
-  );
+  return <section className="panel history-panel"><div className="history-header"><div className="advisor-title"><History /><div><p className="eyebrow">Scenario history</p><h2>Compare crisis runs</h2></div></div>{runs.length > 0 && <button className="ghost-button" onClick={onClear}>Clear</button>}</div>{runs.length === 0 ? <p className="muted">No scenario runs yet. Apply a disaster card to start building a comparison table.</p> : <><div className="scenario-awards">{bestRun && <span>🏆 Best score: {bestRun.scenario.name} ({bestRun.after.score})</span>}{worstRun && <span>🚨 Highest risk: {worstRun.scenario.name} ({worstRun.after.blackoutRisk}%)</span>}</div><div className="history-list">{runs.map((run) => <article className="history-card" key={run.id}><strong>{run.scenario.icon} {run.scenario.name}</strong><small>{run.scenario.category} · {run.scenario.severity}</small><div className="history-stats"><span>Score {run.before.score} → {run.after.score}</span><span>Risk {run.before.blackoutRisk}% → {run.after.blackoutRisk}%</span><span>CO₂ {run.before.carbon} → {run.after.carbon}</span></div></article>)}</div></>}</section>;
 }
 
-function GamePanel({ year, budget, selected, finalMetrics, isFinished, onInvest, onNextYear, onRestart }: { year: number; budget: number; selected: string[]; finalMetrics: Metrics; isFinished: boolean; onInvest: (investment: Investment) => void; onNextYear: () => void; onRestart: () => void; }) {
+function GamePanel({ year, budget, selected, finalMetrics, isFinished, onInvest, onNextYear, onRestart }: { year: number; budget: number; selected: string[]; finalMetrics: Metrics; isFinished: boolean; onInvest: (investment: Investment) => void; onNextYear: () => void; onRestart: () => void }) {
   const turnsLeft = Math.max(0, END_YEAR - year);
-  return (
-    <section className="panel game-panel">
-      <div className="advisor-title"><CalendarDays /><div><p className="eyebrow">Phase 4 game loop</p><h2>{isFinished ? '2040 report card' : `Year ${year}`}</h2></div></div>
-      <div className="game-stats"><span>Budget: €{budget}B</span><span>Turns left: {turnsLeft}</span><span>Target: score 75+</span></div>
-      {isFinished ? (
-        <div className="final-card">
-          <Trophy />
-          <h3>{finalMetrics.score >= 75 && finalMetrics.reliability >= 90 ? 'Energy transition won' : 'Transition incomplete'}</h3>
-          <p>Final score {finalMetrics.score}/100 · Reliability {finalMetrics.reliability}% · Carbon {finalMetrics.carbon} gCO₂/kWh · Price €{finalMetrics.price.toFixed(2)}/kWh</p>
-          <button className="reset-button" onClick={onRestart}>Play again</button>
-        </div>
-      ) : (
-        <>
-          <div className="investment-list">
-            {investments.map((investment) => {
-              const disabled = budget < investment.cost;
-              return <button className="investment-card" disabled={disabled} key={investment.id} onClick={() => onInvest(investment)}><span>{investment.icon}</span><strong>{investment.name}</strong><small>€{investment.cost}B · {investment.description}</small></button>;
-            })}
-          </div>
-          <button className="next-year-button" onClick={onNextYear}>End year and trigger crisis</button>
-          {selected.length > 0 && <p className="muted">This year: {selected.join(', ')}</p>}
-        </>
-      )}
-    </section>
-  );
+  return <section className="panel game-panel"><div className="advisor-title"><CalendarDays /><div><p className="eyebrow">Phase 4 game loop</p><h2>{isFinished ? '2040 report card' : `Year ${year}`}</h2></div></div><div className="game-stats"><span>Budget: €{budget}B</span><span>Turns left: {turnsLeft}</span><span>Target: score 75+</span></div>{isFinished ? <div className="final-card"><Trophy /><h3>{finalMetrics.score >= 75 && finalMetrics.reliability >= 90 ? 'Energy transition won' : 'Transition incomplete'}</h3><p>Final score {finalMetrics.score}/100 · Reliability {finalMetrics.reliability}% · Carbon {finalMetrics.carbon} gCO₂/kWh · Price €{finalMetrics.price.toFixed(2)}/kWh</p><button className="reset-button" onClick={onRestart}>Play again</button></div> : <><div className="investment-list">{investments.map((investment) => <button className="investment-card" disabled={budget < investment.cost} key={investment.id} onClick={() => onInvest(investment)}><span>{investment.icon}</span><strong>{investment.name}</strong><small>€{investment.cost}B · {investment.description}</small></button>)}</div><button className="next-year-button" onClick={onNextYear}>End year and trigger crisis</button>{selected.length > 0 && <p className="muted">This year: {selected.join(', ')}</p>}</>}</section>;
 }
 
 function YearTimeline({ records }: { records: YearRecord[] }) {
-  return (
-    <section className="panel history-panel">
-      <div className="advisor-title"><History /><div><p className="eyebrow">Turn history</p><h2>Annual timeline</h2></div></div>
-      {records.length === 0 ? <p className="muted">End a year to record investments, crisis, score, and budget.</p> : <div className="history-list">{records.map((record) => <article className="history-card" key={record.year}><strong>{record.year} · score {record.metrics.score}</strong><small>{record.event ? `${record.event.icon} ${record.event.name}` : 'No major crisis'} · Budget €{record.budget}B</small><div className="history-stats"><span>Reliability {record.metrics.reliability}%</span><span>Risk {record.metrics.blackoutRisk}%</span><span>Invested {record.investments.length ? record.investments.join(', ') : 'Nothing'}</span></div></article>)}</div>}
-    </section>
-  );
+  return <section className="panel history-panel"><div className="advisor-title"><History /><div><p className="eyebrow">Turn history</p><h2>Annual timeline</h2></div></div>{records.length === 0 ? <p className="muted">End a year to record investments, crisis, score, and budget.</p> : <div className="history-list">{records.map((record) => <article className="history-card" key={record.year}><strong>{record.year} · score {record.metrics.score}</strong><small>{record.event ? `${record.event.icon} ${record.event.name}` : 'No major crisis'} · Budget €{record.budget}B</small><div className="history-stats"><span>Reliability {record.metrics.reliability}%</span><span>Risk {record.metrics.blackoutRisk}%</span><span>Invested {record.investments.length ? record.investments.join(', ') : 'Nothing'}</span></div></article>)}</div>}</section>;
 }
 
 export default function App() {
@@ -229,6 +118,8 @@ export default function App() {
   const metrics = useMemo(() => simulate(state), [state]);
   const advisorMessage = useMemo(() => buildAdvisorMessage(state, metrics), [state, metrics]);
   const latestRun = scenarioRuns.find((run) => run.id === latestRunId);
+  const latestEventName = latestRun?.scenario.name;
+  const latestEventIcon = latestRun?.scenario.icon;
 
   const updateState = (key: keyof EnergyState, value: number) => setState((current) => ({ ...current, [key]: value }));
 
@@ -279,7 +170,9 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      <EventToast latestEventName={latestEventName} latestEventIcon={latestEventIcon} />
       <header className="hero"><div><p className="eyebrow">Hackathon energy simulator</p><h1>Watt-If?</h1><p>Become the Minister of Energy. Invest each year, survive crises, and try to reach 2040 with a reliable, affordable, low-carbon grid.</p></div><button className="reset-button" onClick={resetAll}><RotateCcw size={16} /> Reset grid</button></header>
+      <VisualStatusStrip metrics={metrics} year={year} latestEventName={latestEventName} />
       <section className="metrics-grid phase-two">
         <MetricCard label="Grid score" value={`${metrics.score}/100`} detail="Reliability + carbon + price + approval" tone={tone(metrics.score, 76, 54)} />
         <MetricCard label="Reliability" value={`${metrics.reliability}%`} detail={`${metrics.supply} GW supply / ${metrics.peakDemand} GW peak`} tone={tone(metrics.reliability, 94, 80)} />
@@ -293,11 +186,11 @@ export default function App() {
         <MetricCard label="Public approval" value={`${metrics.approval}%`} detail="Citizens reward clean, cheap reliability" tone={tone(metrics.approval, 70, 45)} />
       </section>
       <div className="dashboard">
-        <aside className="controls-stack"><GamePanel year={year} budget={budget} selected={turnInvestments} finalMetrics={metrics} isFinished={isFinished} onInvest={invest} onNextYear={nextYear} onRestart={restart} /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /></aside>
+        <aside className="controls-stack"><GamePanel year={year} budget={budget} selected={turnInvestments} finalMetrics={metrics} isFinished={isFinished} onInvest={invest} onNextYear={nextYear} onRestart={restart} /><ReportCardPreview metrics={metrics} /><DemoCueCard /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /></aside>
         <div className="main-stage"><GridMap metrics={metrics} /><section className="panel advisor"><div className="advisor-title"><Activity /><div><p className="eyebrow">Chief Energy Advisor</p><h2>Situation report</h2></div></div><p>{advisorMessage}</p></section><ScenarioImpact run={latestRun} /><Breakdown metrics={metrics} /><YearTimeline records={yearRecords} /><ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} /></div>
         <aside className="panel scenarios-panel"><p className="eyebrow">Phase 3</p><h2>Scenario mode</h2><p className="muted">Manually apply a crisis card or use the annual game loop to trigger one automatically.</p><div className="scenario-list">{scenarios.map((scenario) => <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}><span className="scenario-icon">{scenario.icon}</span><strong>{scenario.name}</strong><small>{scenario.category} · {scenario.severity}</small><em>{scenario.description}</em></button>)}</div></aside>
       </div>
-      <footer className="footer-note"><Zap size={16} /> Phase 4: yearly turns, budgeted investments, automatic crisis events, and 2040 win condition.</footer>
+      <footer className="footer-note"><Zap size={16} /> Phase 6: polished visual storytelling, crisis toast, animated grid states, report card, and demo cue card.</footer>
     </main>
   );
 }
