@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Activity, BarChart3, CalendarDays, Gauge, History, RotateCcw, Trophy, Zap } from 'lucide-react';
+import { BottomStatBar, BuildDeck, CrisisActionPanel, GameHud } from './components/GameChrome';
 import { GuidedDemo } from './components/GuidedDemo';
 import { MetricsGrid } from './components/MetricsGrid';
 import { DemoCueCard, EventToast, ReportCardPreview, VisualStatusStrip } from './components/Phase6Visuals';
@@ -65,16 +66,17 @@ export default function App() {
   const nextDemoStep = () => { const next = (demoStep + 1) % 4; setDemoStep(next); if (next === 0) applyCountryPreset(countryPresets[0]); if (next === 1) applyScenario(scenarios[0]); if (next === 2) invest(investments.find((investment) => investment.id === 'batteries') ?? investments[0]); if (next === 3) document.getElementById('scenario-export-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
   return (
-    <main className="app-shell">
+    <main className="app-shell game-screen">
       <EventToast latestEventName={latestEventName} latestEventIcon={latestEventIcon} />
-      <header className="hero"><div><p className="eyebrow">Hackathon energy simulator</p><h1>Watt-If?</h1><p>Become the Minister of Energy. Invest each year, survive crises, and try to reach 2040 with a reliable, affordable, low-carbon grid.</p></div><button className="reset-button" onClick={resetAll}><RotateCcw size={16} /> Reset grid</button></header>
-      <div id="scenario-export-card" className="export-target"><VisualStatusStrip metrics={metrics} year={year} latestEventName={latestEventName} /><MetricsGrid metrics={metrics} /></div>
-      <div className="dashboard">
-        <aside className="controls-stack"><GuidedDemo currentStep={demoStep} onStart={startDemo} onNext={nextDemoStep} /><GamePanel year={year} budget={budget} selected={turnInvestments} finalMetrics={metrics} isFinished={isFinished} onInvest={invest} onNextYear={nextYear} onRestart={restart} /><ExportPanel targetId="scenario-export-card" /><PresetPanel onApply={applyCountryPreset} /><ReportCardPreview metrics={metrics} /><DemoCueCard /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /></aside>
-        <div className="main-stage"><GridMap metrics={metrics} /><BenchmarkPanel metrics={metrics} /><section className="panel advisor"><div className="advisor-title"><Activity /><div><p className="eyebrow">Chief Energy Advisor</p><h2>Situation report</h2></div></div><p>{advisorMessage}</p></section><ScenarioImpact run={latestRun} /><Breakdown metrics={metrics} /><YearTimeline records={yearRecords} /><ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} /></div>
-        <aside className="panel scenarios-panel"><p className="eyebrow">Scenario mode</p><h2>Crisis cards</h2><p className="muted">Compare against countries, apply presets, export a scenario, or manually trigger crises.</p><div className="scenario-list">{scenarios.map((scenario) => <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}><span className="scenario-icon">{scenario.icon}</span><strong>{scenario.name}</strong><small>{scenario.category} · {scenario.severity}</small><em>{scenario.description}</em></button>)}</div></aside>
+      <GameHud year={year} budget={budget} metrics={metrics} />
+      <div id="scenario-export-card" className="export-target"><VisualStatusStrip metrics={metrics} year={year} latestEventName={latestEventName} /></div>
+      <div className="game-board">
+        <aside className="left-command"><CrisisActionPanel latestEventName={latestEventName} metrics={metrics} onNextYear={nextYear} /><GuidedDemo currentStep={demoStep} onStart={startDemo} onNext={nextDemoStep} /><GamePanel year={year} budget={budget} selected={turnInvestments} finalMetrics={metrics} isFinished={isFinished} onInvest={invest} onNextYear={nextYear} onRestart={restart} /></aside>
+        <section className="center-playfield"><GridMap metrics={metrics} /><BuildDeck budget={budget} onInvest={invest} /><BottomStatBar metrics={metrics} /></section>
+        <aside className="right-command"><section className="panel scenarios-panel"><p className="eyebrow">Scenario mode</p><h2>Crisis cards</h2><p className="muted">Trigger crises manually or use the annual loop.</p><div className="scenario-list">{scenarios.map((scenario) => <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}><span className="scenario-icon">{scenario.icon}</span><strong>{scenario.name}</strong><small>{scenario.category} · {scenario.severity}</small><em>{scenario.description}</em></button>)}</div></section><BenchmarkPanel metrics={metrics} /><ReportCardPreview metrics={metrics} /><ExportPanel targetId="scenario-export-card" /></aside>
       </div>
-      <footer className="footer-note"><Zap size={16} /> Refactor + PNG export + guided demo + sourced dataset presets.</footer>
+      <details className="advanced-sim"><summary>Advanced simulator controls</summary><div className="advanced-grid"><MetricsGrid metrics={metrics} /><PresetPanel onApply={applyCountryPreset} /><SliderGroup title="Energy production" controls={productionControls} state={state} onChange={updateState} /><SliderGroup title="Demand pressure" controls={demandControls} state={state} onChange={updateState} /><SliderGroup title="Climate events" controls={eventControls} state={state} onChange={updateState} /><section className="panel advisor"><div className="advisor-title"><Activity /><div><p className="eyebrow">Chief Energy Advisor</p><h2>Situation report</h2></div></div><p>{advisorMessage}</p></section><ScenarioImpact run={latestRun} /><Breakdown metrics={metrics} /><YearTimeline records={yearRecords} /><ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} /><DemoCueCard /></div></details>
+      <footer className="footer-note"><Zap size={16} /> Game UI pass: HUD, crisis window, build cards, playfield, bottom stats.</footer>
     </main>
   );
 }
