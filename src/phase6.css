@@ -1,0 +1,192 @@
+.visual-status-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 20px;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 28px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(103, 232, 249, 0.18), transparent 18rem),
+    rgba(15, 23, 42, 0.72);
+  box-shadow: 0 20px 90px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.visual-status-strip::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -60% -20%;
+  height: 120px;
+  background: linear-gradient(90deg, transparent, rgba(103, 232, 249, 0.22), transparent);
+  animation: sweep 3.8s infinite linear;
+}
+
+.visual-status-strip.calm { border-color: rgba(45, 212, 191, 0.34); }
+.visual-status-strip.alert { border-color: rgba(250, 204, 21, 0.36); }
+.visual-status-strip.danger { border-color: rgba(248, 113, 113, 0.42); }
+
+.visual-status-copy h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  letter-spacing: -0.05em;
+}
+
+.visual-status-copy p:not(.eyebrow) {
+  max-width: 720px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.grid-pulse-orb {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  background: rgba(8, 47, 73, 0.66);
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.22);
+  animation: orbPulse 2.4s infinite ease-in-out;
+}
+
+.grid-pulse-orb svg { color: #67e8f9; }
+
+.visual-status-kpis {
+  display: grid;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.visual-status-kpis span {
+  border-radius: 999px;
+  padding: 9px 12px;
+  background: rgba(2, 6, 23, 0.46);
+  color: #dbeafe;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  font-weight: 800;
+}
+
+.event-toast {
+  position: sticky;
+  top: 14px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 18px;
+  padding: 13px 15px;
+  background: rgba(69, 26, 3, 0.72);
+  color: #fef3c7;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.28);
+  animation: toastIn 0.35s ease-out;
+}
+
+.event-toast strong,
+.event-toast span {
+  display: block;
+}
+
+.event-toast span { color: #fde68a; }
+
+.report-card-preview,
+.demo-cue-card {
+  display: grid;
+  gap: 14px;
+}
+
+.grade-badge {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(45, 212, 191, 0.18));
+  border: 1px solid rgba(103, 232, 249, 0.35);
+  color: #eff6ff;
+  font-size: 3rem;
+  font-weight: 950;
+  letter-spacing: -0.08em;
+}
+
+.report-card-preview p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.report-rubric {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.report-rubric span {
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(2, 6, 23, 0.32);
+  color: #dbeafe;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  font-size: 0.85rem;
+}
+
+.demo-cue-card ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.grid-map {
+  box-shadow: inset 0 0 80px rgba(34, 211, 238, 0.06);
+}
+
+.grid-map .city.danger {
+  animation: blackoutBlink 1.2s infinite ease-in-out;
+}
+
+.grid-map .city.stressed {
+  animation: stressBlink 1.8s infinite ease-in-out;
+}
+
+@keyframes sweep {
+  from { transform: translateX(-20%); }
+  to { transform: translateX(20%); }
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.86; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes toastIn {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes blackoutBlink {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(0.48); }
+}
+
+@keyframes stressBlink {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@media (max-width: 900px) {
+  .visual-status-strip,
+  .report-rubric {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-pulse-orb {
+    width: 72px;
+    height: 72px;
+  }
+}
