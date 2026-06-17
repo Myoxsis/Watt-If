@@ -11,6 +11,7 @@ import './game-theme.css';
 import './arcade-game-ui.css';
 import './window-modals.css';
 import './troubleshooting-fixes.css';
+import './game-visual-fixes.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
