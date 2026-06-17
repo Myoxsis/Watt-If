@@ -1,3 +1,4 @@
+import { toPng } from 'html-to-image';
 import { Camera, Database, GitCompareArrows } from 'lucide-react';
 import { countryBenchmarks, countryPresets, type CountryPreset } from '../data/countryPresets';
 import type { EnergyState, Metrics } from '../lib/simulator';
@@ -14,7 +15,7 @@ export function PresetPanel({ onApply }: { onApply: (preset: CountryPreset) => v
       <div className="advisor-title">
         <Database />
         <div>
-          <p className="eyebrow">Phase 7 presets</p>
+          <p className="eyebrow">Dataset presets</p>
           <h2>Real-world inspired grids</h2>
         </div>
       </div>
@@ -24,6 +25,7 @@ export function PresetPanel({ onApply }: { onApply: (preset: CountryPreset) => v
             <span>{preset.flag}</span>
             <strong>{preset.name}</strong>
             <small>{preset.description}</small>
+            <em>{preset.sourceNote}</em>
           </button>
         ))}
       </div>
@@ -51,7 +53,7 @@ export function BenchmarkPanel({ metrics }: { metrics: Metrics }) {
       <div className="advisor-title">
         <GitCompareArrows />
         <div>
-          <p className="eyebrow">Phase 7 comparison</p>
+          <p className="eyebrow">Benchmark comparison</p>
           <h2>Compare to country benchmarks</h2>
         </div>
       </div>
@@ -64,8 +66,8 @@ export function BenchmarkPanel({ metrics }: { metrics: Metrics }) {
             </div>
             <div className="benchmark-grid">
               <span>Score {country.metrics.score}</span>
-              <span>CO₂ {country.metrics.carbon}g</span>
-              <span>Price €{country.metrics.price.toFixed(2)}</span>
+              <span>CO2 {country.metrics.carbon}g</span>
+              <span>Price EUR {country.metrics.price.toFixed(2)}</span>
               <span>Reliability {country.metrics.reliability}%</span>
             </div>
           </article>
@@ -80,23 +82,17 @@ export function ExportPanel({ targetId }: { targetId: string }) {
     const target = document.getElementById(targetId);
     if (!target) return;
 
-    const rect = target.getBoundingClientRect();
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml" style="background:#070b16;color:white;font-family:Inter,Arial,sans-serif;padding:24px;width:${rect.width}px;height:${rect.height}px;box-sizing:border-box;">
-            ${target.innerHTML}
-          </div>
-        </foreignObject>
-      </svg>`;
+    const dataUrl = await toPng(target, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: '#070b16',
+      filter: (node) => !(node instanceof HTMLElement && node.classList.contains('event-toast')),
+    });
 
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
-    link.download = 'watt-if-scenario.svg';
+    link.href = dataUrl;
+    link.download = 'watt-if-scenario.png';
     link.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -104,12 +100,12 @@ export function ExportPanel({ targetId }: { targetId: string }) {
       <div className="advisor-title">
         <Camera />
         <div>
-          <p className="eyebrow">Phase 7 export</p>
+          <p className="eyebrow">Scenario export</p>
           <h2>Export scenario image</h2>
         </div>
       </div>
-      <p className="muted">Downloads the current presentation summary as an SVG image for slides, judging, or sharing.</p>
-      <button className="next-year-button" onClick={exportImage}>Export current scenario</button>
+      <p className="muted">Downloads the current presentation summary as a high-resolution PNG for slides, judging, or sharing.</p>
+      <button className="next-year-button" onClick={exportImage}>Export PNG</button>
     </section>
   );
 }
