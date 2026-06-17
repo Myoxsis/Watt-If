@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Activity, BarChart3, Gauge, RotateCcw, Zap } from 'lucide-react';
-import { scenarios } from './data/scenarios';
+import { Activity, BarChart3, Gauge, History, RotateCcw, Zap } from 'lucide-react';
+import { scenarios, type Scenario } from './data/scenarios';
 import { buildAdvisorMessage, initialState, simulate, type EnergyState, type Metrics } from './lib/simulator';
 
 const productionControls: Array<{ key: keyof EnergyState; label: string; icon: string }> = [
@@ -24,9 +24,27 @@ const eventControls: Array<{ key: keyof EnergyState; label: string; icon: string
   { key: 'windDrought', label: 'Wind drought', icon: '🌀' },
 ];
 
+type ScenarioRun = {
+  id: number;
+  scenario: Scenario;
+  before: Metrics;
+  after: Metrics;
+};
+
 function tone(value: number, good: number, warn: number, direction: 'higher' | 'lower' = 'higher') {
   if (direction === 'higher') return value >= good ? 'good' : value >= warn ? 'warn' : 'bad';
   return value <= good ? 'good' : value <= warn ? 'warn' : 'bad';
+}
+
+function signed(value: number, suffix = '') {
+  if (value > 0) return `+${value}${suffix}`;
+  return `${value}${suffix}`;
+}
+
+function deltaClass(value: number, direction: 'higher' | 'lower' = 'higher') {
+  if (value === 0) return 'neutral';
+  const good = direction === 'higher' ? value > 0 : value < 0;
+  return good ? 'positive' : 'negative';
 }
 
 function SliderGroup({
@@ -137,13 +155,132 @@ function Breakdown({ metrics }: { metrics: Metrics }) {
   );
 }
 
+function ScenarioImpact({ run }: { run?: ScenarioRun }) {
+  if (!run) {
+    return (
+      <section className="panel impact-panel empty-impact">
+        <p className="eyebrow">Phase 3 scenario mode</p>
+        <h2>Scenario impact</h2>
+        <p className="muted">Pick a scenario to compare the grid before and after the crisis.</p>
+      </section>
+    );
+  }
+
+  const scoreDelta = run.after.score - run.before.score;
+  const reliabilityDelta = run.after.reliability - run.before.reliability;
+  const blackoutDelta = run.after.blackoutRisk - run.before.blackoutRisk;
+  const carbonDelta = run.after.carbon - run.before.carbon;
+  const priceDelta = Math.round((run.after.price - run.before.price) * 100) / 100;
+
+  return (
+    <section className="panel impact-panel">
+      <p className="eyebrow">Latest scenario impact</p>
+      <h2>
+        {run.scenario.icon} {run.scenario.name}
+      </h2>
+      <p className="scenario-narrative">{run.scenario.narrative}</p>
+      <div className="impact-grid">
+        <div>
+          <span>Score</span>
+          <strong className={deltaClass(scoreDelta)}>{signed(scoreDelta)}</strong>
+        </div>
+        <div>
+          <span>Reliability</span>
+          <strong className={deltaClass(reliabilityDelta)}>{signed(reliabilityDelta, '%')}</strong>
+        </div>
+        <div>
+          <span>Blackout risk</span>
+          <strong className={deltaClass(blackoutDelta, 'lower')}>{signed(blackoutDelta, '%')}</strong>
+        </div>
+        <div>
+          <span>Carbon</span>
+          <strong className={deltaClass(carbonDelta, 'lower')}>{signed(carbonDelta, ' g')}</strong>
+        </div>
+        <div>
+          <span>Price</span>
+          <strong className={deltaClass(priceDelta, 'lower')}>{signed(priceDelta, '€/kWh')}</strong>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ScenarioHistory({ runs, onClear }: { runs: ScenarioRun[]; onClear: () => void }) {
+  const bestRun = runs.reduce<ScenarioRun | undefined>((best, run) => (!best || run.after.score > best.after.score ? run : best), undefined);
+  const worstRun = runs.reduce<ScenarioRun | undefined>((worst, run) => (!worst || run.after.blackoutRisk > worst.after.blackoutRisk ? run : worst), undefined);
+
+  return (
+    <section className="panel history-panel">
+      <div className="history-header">
+        <div className="advisor-title">
+          <History />
+          <div>
+            <p className="eyebrow">Scenario history</p>
+            <h2>Compare crisis runs</h2>
+          </div>
+        </div>
+        {runs.length > 0 && <button className="ghost-button" onClick={onClear}>Clear</button>}
+      </div>
+
+      {runs.length === 0 ? (
+        <p className="muted">No scenario runs yet. Apply a disaster card to start building a comparison table.</p>
+      ) : (
+        <>
+          <div className="scenario-awards">
+            {bestRun && <span>🏆 Best score: {bestRun.scenario.name} ({bestRun.after.score})</span>}
+            {worstRun && <span>🚨 Highest risk: {worstRun.scenario.name} ({worstRun.after.blackoutRisk}%)</span>}
+          </div>
+          <div className="history-list">
+            {runs.map((run) => (
+              <article className="history-card" key={run.id}>
+                <strong>{run.scenario.icon} {run.scenario.name}</strong>
+                <small>{run.scenario.category} · {run.scenario.severity}</small>
+                <div className="history-stats">
+                  <span>Score {run.before.score} → {run.after.score}</span>
+                  <span>Risk {run.before.blackoutRisk}% → {run.after.blackoutRisk}%</span>
+                  <span>CO₂ {run.before.carbon} → {run.after.carbon}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function App() {
   const [state, setState] = useState<EnergyState>(initialState);
+  const [scenarioRuns, setScenarioRuns] = useState<ScenarioRun[]>([]);
+  const [latestRunId, setLatestRunId] = useState<number | undefined>(undefined);
   const metrics = useMemo(() => simulate(state), [state]);
   const advisorMessage = useMemo(() => buildAdvisorMessage(state, metrics), [state, metrics]);
+  const latestRun = scenarioRuns.find((run) => run.id === latestRunId);
 
   const updateState = (key: keyof EnergyState, value: number) => {
     setState((current) => ({ ...current, [key]: value }));
+  };
+
+  const applyScenario = (scenario: Scenario) => {
+    setState((current) => {
+      const before = simulate(current);
+      const nextState = { ...current, ...scenario.patch };
+      const after = simulate(nextState);
+      const run: ScenarioRun = {
+        id: Date.now(),
+        scenario,
+        before,
+        after,
+      };
+      setScenarioRuns((runs) => [run, ...runs].slice(0, 6));
+      setLatestRunId(run.id);
+      return nextState;
+    });
+  };
+
+  const resetAll = () => {
+    setState(initialState);
+    setLatestRunId(undefined);
   };
 
   return (
@@ -157,7 +294,7 @@ export default function App() {
             storage limits, heatwaves, wind droughts, EV growth, nuclear outages, and gas shocks.
           </p>
         </div>
-        <button className="reset-button" onClick={() => setState(initialState)}>
+        <button className="reset-button" onClick={resetAll}>
           <RotateCcw size={16} /> Reset grid
         </button>
       </header>
@@ -196,18 +333,22 @@ export default function App() {
             <p>{advisorMessage}</p>
           </section>
 
+          <ScenarioImpact run={latestRun} />
           <Breakdown metrics={metrics} />
+          <ScenarioHistory runs={scenarioRuns} onClear={() => setScenarioRuns([])} />
         </div>
 
         <aside className="panel scenarios-panel">
-          <h2>Disaster scenarios</h2>
-          <p className="muted">Click a card to rewrite the future.</p>
+          <p className="eyebrow">Phase 3</p>
+          <h2>Scenario mode</h2>
+          <p className="muted">Apply a crisis card, compare before/after results, then try to recover the grid.</p>
           <div className="scenario-list">
             {scenarios.map((scenario) => (
-              <button key={scenario.name} className="scenario-card" onClick={() => setState((current) => ({ ...current, ...scenario.patch }))}>
+              <button key={scenario.name} className="scenario-card" onClick={() => applyScenario(scenario)}>
                 <span className="scenario-icon">{scenario.icon}</span>
                 <strong>{scenario.name}</strong>
-                <small>{scenario.description}</small>
+                <small>{scenario.category} · {scenario.severity}</small>
+                <em>{scenario.description}</em>
               </button>
             ))}
           </div>
@@ -215,7 +356,7 @@ export default function App() {
       </div>
 
       <footer className="footer-note">
-        <Zap size={16} /> Phase 2: richer supply-demand engine, intermittency, storage support, peak stress, blackout risk, and grid scoring.
+        <Zap size={16} /> Phase 3: scenario cards now produce before/after impact reports and comparison history.
       </footer>
     </main>
   );
