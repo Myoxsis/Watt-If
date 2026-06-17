@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
-export type GameWindowKind = 'advisor' | 'metrics' | 'presets' | 'export' | 'history' | 'settings' | null;
+export type GameWindowKind = 'advisor' | 'metrics' | 'presets' | 'export' | 'history' | null;
 
 export function GameWindow({
   title,
@@ -14,6 +14,15 @@ export function GameWindow({
   children: ReactNode;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="game-modal-window" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
