@@ -1,0 +1,393 @@
+/* Final visual correction pass: removes overlap, strengthens game hierarchy, and cleans panel layout. */
+
+/* 1) Continuous top HUD instead of scattered widgets */
+.game-hud {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  grid-template-columns: 260px repeat(4, minmax(120px, 1fr)) minmax(260px, 1.4fr);
+  gap: 0;
+  overflow: hidden;
+  border: 3px solid rgba(92, 199, 255, 0.28);
+  border-radius: 22px;
+  padding: 8px;
+  background:
+    linear-gradient(180deg, rgba(93, 190, 255, 0.2), rgba(5, 20, 42, 0.92)),
+    #071529;
+  box-shadow: 0 20px 45px rgba(0,0,0,.36), inset 0 2px rgba(255,255,255,.12);
+}
+
+.game-hud > * {
+  border-radius: 0 !important;
+  border-width: 0 1px 0 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.game-hud > *:last-child {
+  border-right: 0 !important;
+}
+
+.game-logo {
+  padding: 0 16px 0 4px;
+}
+
+.game-logo strong {
+  font-size: clamp(2rem, 3vw, 3.2rem);
+}
+
+.hud-pill,
+.hud-health {
+  min-height: 58px;
+  padding: 8px 14px;
+}
+
+.hud-health meter {
+  height: 12px;
+}
+
+/* 2) Dock belongs to the command header, not inside the map */
+.window-dock {
+  position: sticky;
+  top: 92px;
+  z-index: 44;
+  margin: 10px auto 18px;
+  transform: none;
+  border: 2px solid rgba(92, 199, 255, 0.28);
+  background: rgba(5, 18, 37, 0.92);
+}
+
+/* 3) Game board hierarchy */
+.game-board {
+  grid-template-columns: 270px minmax(720px, 1fr) 320px;
+  align-items: start;
+}
+
+.left-command,
+.right-command {
+  gap: 14px;
+}
+
+/* 4) Compact crisis panel so it informs instead of dominating */
+.crisis-action-window {
+  border-radius: 18px;
+}
+
+.crisis-title {
+  padding: 14px 16px 10px;
+}
+
+.crisis-title > span {
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+}
+
+.crisis-title strong {
+  font-size: 1.15rem;
+}
+
+.crisis-art {
+  height: 86px;
+  margin: 0 12px 10px;
+}
+
+.sun-core {
+  width: 42px;
+  height: 42px;
+}
+
+.crisis-effects {
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.crisis-effects span {
+  padding: 8px 10px;
+  font-size: .85rem;
+}
+
+.primary-game-action {
+  width: calc(100% - 24px);
+  margin: 0 12px 14px;
+  min-height: 44px;
+}
+
+/* 5) Left column is now a command area, not a pile of panels */
+.left-command .guided-demo-panel {
+  display: none;
+}
+
+.game-panel .investment-list {
+  display: none;
+}
+
+.game-panel {
+  gap: 12px;
+}
+
+.game-panel .advisor-title h2 {
+  padding-left: 0;
+}
+
+.game-panel .next-year-button {
+  display: none;
+}
+
+/* 6) Map feels fuller and more like a playable world */
+.center-playfield .map-card {
+  overflow: visible;
+}
+
+.grid-map {
+  min-height: 560px;
+  overflow: hidden;
+}
+
+.grid-map::after {
+  content: 'REGIONAL LOAD  •  LIVE TRANSMISSION  •  CITY DEMAND';
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 4;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(5, 18, 37, 0.82);
+  color: rgba(214, 241, 255, .9);
+  font-size: .7rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.plant::after {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: rgba(4, 14, 30, .72);
+  color: #d9f2ff;
+  font-size: .62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.plant.nuclear::after { content: 'Nuclear'; }
+.plant.solar::after { content: 'Solar'; }
+.plant.wind::after { content: 'Wind'; }
+.plant.hydro::after { content: 'Hydro'; }
+
+.city {
+  position: absolute;
+  isolation: isolate;
+}
+
+.city::before {
+  content: '';
+  position: absolute;
+  inset: -13px;
+  z-index: -1;
+  border: 2px solid rgba(255,255,255,.22);
+  border-radius: 26px;
+  animation: cityDemandPulse 2.4s infinite ease-in-out;
+}
+
+.city::after {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(4, 14, 30, .8);
+  color: #cfefff;
+  font-size: .66rem;
+  font-weight: 900;
+}
+
+.city.paris::after { content: 'Demand hub'; }
+.city.lyon::after { content: 'Industry load'; }
+.city.marseille::after { content: 'Cooling load'; }
+
+@keyframes cityDemandPulse {
+  0%, 100% { transform: scale(.96); opacity: .45; }
+  50% { transform: scale(1.06); opacity: .9; }
+}
+
+/* Add secondary phantom transmission lanes for a denser board without touching JSX */
+.grid-map .l1,
+.grid-map .l2,
+.grid-map .l3,
+.grid-map .l4 {
+  box-shadow: 0 0 16px rgba(99, 245, 255, .5);
+}
+
+/* 7) Build cards live in a real action tray, never overlapping stats */
+.build-deck {
+  position: relative;
+  z-index: 3;
+  margin: 18px 0 0;
+  padding: 44px 16px 16px;
+  border: 3px solid rgba(92, 199, 255, .22);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(30, 87, 133, .88), rgba(5, 18, 37, .94)),
+    #071529;
+  box-shadow: inset 0 2px rgba(255,255,255,.11), 0 16px 35px rgba(0,0,0,.34);
+}
+
+.build-deck::before {
+  content: 'BUILD ACTIONS';
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  color: #dff7ff;
+  font-size: .9rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.build-card {
+  min-height: 154px;
+  height: 154px;
+  padding: 12px;
+  transform: none !important;
+}
+
+.build-card:hover:not(:disabled) {
+  transform: translateY(-5px) !important;
+  box-shadow: inset 0 2px rgba(255,255,255,.2), 0 20px 34px rgba(0,0,0,.42);
+}
+
+.build-card strong {
+  margin-top: 32px;
+  font-size: .9rem;
+}
+
+.build-card small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.5em;
+}
+
+.build-card::before {
+  height: 42px;
+  inset: 44px 12px auto;
+}
+
+.bottom-stat-bar {
+  margin-top: 14px;
+}
+
+/* 8) Benchmark panel becomes game badges */
+.benchmark-card {
+  border-radius: 18px;
+  border-width: 2px;
+}
+
+.benchmark-card:first-child {
+  border-color: rgba(77, 255, 181, .55);
+  background:
+    linear-gradient(90deg, rgba(77, 255, 181, .16), transparent),
+    rgba(6, 18, 35, .96);
+}
+
+.benchmark-card:first-child::before {
+  content: 'Closest match';
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #4dffb5;
+  color: #06111f;
+  font-size: .68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.benchmark-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* 9) Role colors are now more distinct */
+.scenarios-panel { border-color: rgba(255, 93, 115, .28) !important; }
+.phase7-panel { border-color: rgba(124, 119, 255, .28) !important; }
+.report-card-preview { border-color: rgba(255, 216, 77, .34) !important; }
+.game-panel { border-color: rgba(77, 255, 181, .28) !important; }
+.map-card { border-color: rgba(92, 199, 255, .32) !important; }
+
+/* 10) Interaction feedback */
+.build-card:active,
+.scenario-card:active,
+.primary-game-action:active,
+.next-year-button:active {
+  transform: scale(.985) !important;
+}
+
+.scenario-card:hover {
+  box-shadow: 0 0 0 2px rgba(255, 93, 115, .18), 0 14px 28px rgba(0,0,0,.34);
+}
+
+/* 11) Reduce visual duplication from old advanced/dashboard era */
+.footer-note {
+  margin-top: 20px;
+  opacity: .72;
+}
+
+@media (max-width: 1320px) {
+  .game-board {
+    grid-template-columns: 270px minmax(0, 1fr);
+  }
+
+  .right-command {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .right-command .scenarios-panel {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 940px) {
+  .game-hud {
+    position: static;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .game-logo {
+    grid-column: 1 / -1;
+  }
+
+  .window-dock {
+    position: static;
+  }
+
+  .game-board,
+  .right-command,
+  .bottom-stat-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .build-deck {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .build-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .build-card {
+    height: auto;
+    min-height: 140px;
+  }
+}
