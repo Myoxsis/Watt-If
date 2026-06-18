@@ -19,6 +19,13 @@ function distanceKm(a, b) {
   return Math.round(2 * radius * Math.asin(Math.sqrt(h)) * 10) / 10;
 }
 
+function refreshMapSize() {
+  if (!map) return;
+  window.requestAnimationFrame(() => {
+    map.invalidateSize({ animate: false, pan: false });
+  });
+}
+
 function makeIcon(label, className) {
   return L.divIcon({
     html: `<div class="${className}">${label}</div>`,
@@ -69,6 +76,7 @@ function addMarker(location, label, className, onClick) {
 }
 
 function renderMap() {
+  refreshMapSize();
   clearMap();
   const currentPoint = points()[points().length - 2] ?? game.start;
   const circle = L.circle([currentPoint.lat, currentPoint.lng], {
@@ -102,7 +110,8 @@ function renderMap() {
     className: 'route-line',
   }).addTo(map);
 
-  map.fitBounds(franceBounds, { padding: [24, 24] });
+  map.fitBounds(franceBounds, { padding: [24, 24], animate: false });
+  refreshMapSize();
 }
 
 function renderRouteList() {
@@ -189,13 +198,19 @@ function showResult(score) {
 }
 
 function initMap() {
-  map = L.map('map', { zoomControl: false, attributionControl: false });
+  map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
+    updateWhenIdle: false,
+    updateWhenZooming: false,
+    keepBuffer: 4,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
-  map.fitBounds(franceBounds);
+  map.fitBounds(franceBounds, { animate: false });
+  refreshMapSize();
+  setTimeout(refreshMapSize, 100);
+  setTimeout(refreshMapSize, 350);
 }
 
 $('newGameBtn').addEventListener('click', newGame);
@@ -207,6 +222,8 @@ $('finishBtn').addEventListener('click', () => {
 });
 $('closeResult').addEventListener('click', () => { $('resultModal').hidden = true; });
 $('playAgainBtn').addEventListener('click', () => { $('resultModal').hidden = true; newGame(); });
+window.addEventListener('resize', refreshMapSize);
+window.addEventListener('load', () => setTimeout(refreshMapSize, 100));
 
 initMap();
 newGame();
