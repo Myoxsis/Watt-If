@@ -22,8 +22,14 @@ function distanceKm(a, b) {
 function refreshMapSize() {
   if (!map) return;
   window.requestAnimationFrame(() => {
-    map.invalidateSize({ animate: false, pan: false });
+    map.invalidateSize(true);
   });
+}
+
+function forceMapLayout() {
+  refreshMapSize();
+  setTimeout(refreshMapSize, 100);
+  setTimeout(refreshMapSize, 500);
 }
 
 function makeIcon(label, className) {
@@ -76,7 +82,7 @@ function addMarker(location, label, className, onClick) {
 }
 
 function renderMap() {
-  refreshMapSize();
+  forceMapLayout();
   clearMap();
   const currentPoint = points()[points().length - 2] ?? game.start;
   const circle = L.circle([currentPoint.lat, currentPoint.lng], {
@@ -111,7 +117,7 @@ function renderMap() {
   }).addTo(map);
 
   map.fitBounds(franceBounds, { padding: [24, 24], animate: false });
-  refreshMapSize();
+  forceMapLayout();
 }
 
 function renderRouteList() {
@@ -198,19 +204,25 @@ function showResult(score) {
 }
 
 function initMap() {
-  map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true });
+  map = L.map('map', {
+    zoomControl: false,
+    attributionControl: false,
+    preferCanvas: true,
+    fadeAnimation: false,
+    markerZoomAnimation: false,
+    zoomAnimation: false,
+  });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    updateWhenIdle: false,
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    updateWhenIdle: true,
     updateWhenZooming: false,
-    keepBuffer: 4,
+    keepBuffer: 6,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
   map.fitBounds(franceBounds, { animate: false });
-  refreshMapSize();
-  setTimeout(refreshMapSize, 100);
-  setTimeout(refreshMapSize, 350);
+  map.whenReady(forceMapLayout);
+  forceMapLayout();
 }
 
 $('newGameBtn').addEventListener('click', newGame);
@@ -222,8 +234,8 @@ $('finishBtn').addEventListener('click', () => {
 });
 $('closeResult').addEventListener('click', () => { $('resultModal').hidden = true; });
 $('playAgainBtn').addEventListener('click', () => { $('resultModal').hidden = true; newGame(); });
-window.addEventListener('resize', refreshMapSize);
-window.addEventListener('load', () => setTimeout(refreshMapSize, 100));
+window.addEventListener('resize', forceMapLayout);
+window.addEventListener('load', forceMapLayout);
 
 initMap();
 newGame();
