@@ -3,6 +3,7 @@ let map;
 let game;
 let selectedStations = [];
 let markers = [];
+let rangeCircles = [];
 let routeLine;
 
 const $ = (id) => document.getElementById(id);
@@ -22,8 +23,8 @@ function makeIcon(label, className) {
   return L.divIcon({
     html: `<div class="${className}">${label}</div>`,
     className: '',
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
+    iconSize: [38, 38],
+    iconAnchor: [19, 19],
   });
 }
 
@@ -53,7 +54,9 @@ function isRouteValid() {
 
 function clearMap() {
   markers.forEach((m) => map.removeLayer(m));
+  rangeCircles.forEach((c) => map.removeLayer(c));
   markers = [];
+  rangeCircles = [];
   if (routeLine) map.removeLayer(routeLine);
 }
 
@@ -67,12 +70,25 @@ function addMarker(location, label, className, onClick) {
 
 function renderMap() {
   clearMap();
+  const currentPoint = points()[points().length - 2] ?? game.start;
+  const circle = L.circle([currentPoint.lat, currentPoint.lng], {
+    radius: game.car.range_km * 1000,
+    color: '#63e6ff',
+    weight: 1,
+    fillColor: '#63e6ff',
+    fillOpacity: 0.05,
+    opacity: 0.35,
+  }).addTo(map);
+  rangeCircles.push(circle);
+
   addMarker(game.start, 'A', 'marker-start');
   addMarker(game.end, 'B', 'marker-end');
 
   game.stations.forEach((station) => {
     const selected = selectedStations.some((item) => item.id === station.id);
-    addMarker(station, '⚡', selected ? 'marker-station marker-selected' : 'marker-station', () => {
+    const reachable = distanceKm(currentPoint, station) <= game.car.range_km;
+    const cls = selected ? 'marker-station marker-selected' : reachable ? 'marker-station' : 'marker-station marker-dim';
+    addMarker(station, '⚡', cls, () => {
       if (!selectedStations.some((item) => item.id === station.id)) selectedStations.push(station);
       render();
     });
@@ -80,9 +96,10 @@ function renderMap() {
 
   routeLine = L.polyline(points().map((p) => [p.lat, p.lng]), {
     color: isRouteValid() ? '#5cff9d' : '#ff5d73',
-    weight: 5,
-    opacity: 0.85,
+    weight: 6,
+    opacity: 0.92,
     dashArray: isRouteValid() ? null : '10 10',
+    className: 'route-line',
   }).addTo(map);
 
   map.fitBounds(franceBounds, { padding: [24, 24] });
@@ -98,9 +115,9 @@ function renderRouteList() {
     let detail = '';
     if (next) {
       const leg = legStatus(point, next);
-      detail = `<small>${leg.distance} km to next ${leg.valid ? '✅' : '❌ exceeds range'}</small>`;
+      detail = `<small>${leg.distance} km to next ${leg.valid ? '✅ within range' : '❌ exceeds range'}</small>`;
     }
-    li.innerHTML = `<strong>${index === 0 ? 'A' : index === route.length - 1 ? 'B' : 'Stop'} · ${point.name}</strong>${detail}`;
+    li.innerHTML = `<strong>${index === 0 ? 'START' : index === route.length - 1 ? 'FINISH' : 'RECHARGE'} · ${point.name}</strong>${detail}`;
     list.appendChild(li);
   });
 }
@@ -129,6 +146,13 @@ function scoreRoute() {
   return { value: score, text: `${selectedStations.length} recharge stop(s), ${Math.round(extraKm)} km extra versus direct distance.` };
 }
 
+function scoreTitle(score) {
+  if (score >= 90) return 'Legendary eco-driver';
+  if (score >= 75) return 'Efficient road captain';
+  if (score >= 55) return 'Route completed';
+  return 'You made it, but barely';
+}
+
 function render() {
   $('carName').textContent = game.car.name;
   $('carRange').textContent = game.car.range_km;
@@ -138,7 +162,7 @@ function render() {
   $('directDistance').textContent = `${game.directDistanceKm} km`;
   $('routeDistance').textContent = `${totalDistance()} km`;
   $('stopCount').textContent = selectedStations.length;
-  $('routeStatus').textContent = isRouteValid() ? 'Valid so far' : 'Leg too long';
+  $('routeStatus').textContent = isRouteValid() ? 'Valid route' : 'Leg too long';
 
   renderMap();
   renderRouteList();
@@ -147,6 +171,7 @@ function render() {
   const score = scoreRoute();
   $('scoreValue').textContent = score.value;
   $('scoreText').textContent = score.text;
+  $('liveScore').textContent = score.value === '-' ? 'Invalid' : `${score.value}/100`;
 }
 
 async function newGame() {
@@ -156,8 +181,15 @@ async function newGame() {
   render();
 }
 
+function showResult(score) {
+  $('resultTitle').textContent = scoreTitle(score.value);
+  $('resultScore').textContent = `${score.value}/100`;
+  $('resultText').textContent = score.text;
+  $('resultModal').hidden = false;
+}
+
 function initMap() {
-  map = L.map('map', { zoomControl: false });
+  map = L.map('map', { zoomControl: false, attributionControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
@@ -171,8 +203,10 @@ $('undoBtn').addEventListener('click', () => { selectedStations.pop(); render();
 $('finishBtn').addEventListener('click', () => {
   const score = scoreRoute();
   if (score.value === '-') alert(score.text);
-  else alert(`Route finished! Score: ${score.value}/100\n${score.text}`);
+  else showResult(score);
 });
+$('closeResult').addEventListener('click', () => { $('resultModal').hidden = true; });
+$('playAgainBtn').addEventListener('click', () => { $('resultModal').hidden = true; newGame(); });
 
 initMap();
 newGame();
