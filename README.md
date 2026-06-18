@@ -1,65 +1,49 @@
-# Watt-If?
+# Road Charge France
 
-An interactive energy crisis simulator built for a hackathon theme around energy.
+A Flask web app game about planning an efficient electric-car trip across France.
 
-You play the role of a Minister of Energy and stress-test a national grid against heatwaves, wind droughts, EV adoption, nuclear outages, and gas shocks.
+## Game concept
 
-## Phase 1 MVP
+You start from a random French city, point A, with a random electric car at 100% charge. Your goal is to reach point B. Point B is always farther than one full-charge range, so you must stop at charging stations.
 
-- Node + Vite + React + TypeScript app
-- Energy production sliders
-- Demand pressure sliders
-- Climate event sliders
-- Disaster scenario cards
-- Live reliability, blackout risk, carbon, price, and approval metrics
-- Stylized grid map
-- Chief Energy Advisor explanations
+Current level: Easy
 
-## Phase 2 Simulation Engine
-
-The simulator now models:
-
-- Supply vs. average demand and peak demand
-- Renewable intermittency from heatwaves, drought, and wind droughts
-- Battery discharge during peak stress
-- Reserve margin above or below peak load
-- Unserved energy when demand exceeds supply
-- Renewable share and storage coverage
-- Scarcity-based electricity price
-- Weighted carbon intensity
-- Public approval and overall grid score
-- Production breakdown by source
-
-## Phase 3 Scenario Mode
-
-Scenario mode adds:
-
-- Rich crisis cards with category, severity, and narrative
-- Before/after metric comparisons after each scenario
-- Scenario impact panel with score, reliability, blackout risk, carbon, and price deltas
-- Run history for the last six scenarios
-- Best-score and highest-risk highlights
-- Additional scenarios: Data Center Boom and Drought Summer
+- Car starts at 100% charge
+- All charging stations are free
+- Charging stations can be used instantly
+- Objective: minimize total distance and recharge stops
 
 ## Run locally
 
 ```bash
-npm install
-npm run dev
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
 ```
 
-Then open the local URL printed by Vite.
+Then open:
 
-## Build
-
-```bash
-npm run build
+```text
+http://127.0.0.1:5000
 ```
 
-## Next roadmap items
+## Structure
 
-1. Add yearly turns from 2026 to 2040
-2. Add budget and investment choices
-3. Add final report card
-4. Add real-world country presets
-5. Add an LLM-powered scenario generator
+```text
+app.py
+api/new-game
+game_data.py
+templates/index.html
+static/css/style.css
+static/js/game.js
+```
+
+## Next gameplay upgrades
+
+- Add charger power and charging time
+- Add battery percentage between legs
+- Add road-speed based travel time
+- Add paid charging stations
+- Add weather and traffic penalties
+- Add medium/hard difficulty levels
