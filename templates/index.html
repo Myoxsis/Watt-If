@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Watt-If Road Charge</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQJxHDMTSZ3Ercf9UQ8EjjJv3Tuhg9o=" crossorigin="">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <main class="game-shell">
+      <aside class="panel briefing-panel">
+        <p class="eyebrow">Easy level</p>
+        <h1>Road Charge France</h1>
+        <p class="intro">Start at point A with a random EV at 100%. Reach point B efficiently. Point B is always beyond one full-charge range.</p>
+
+        <section class="mission-card">
+          <div>
+            <span class="label">Car</span>
+            <strong id="carName">Loading...</strong>
+          </div>
+          <div class="stat-grid">
+            <span><b id="carRange">-</b> km range</span>
+            <span><b id="battery">-</b> kWh</span>
+            <span><b id="charge">100</b>% charge</span>
+            <span><b>Free</b> stations</span>
+          </div>
+        </section>
+
+        <section class="route-card">
+          <div class="point"><span>A</span><strong id="startName">-</strong></div>
+          <div class="arrow">→</div>
+          <div class="point"><span>B</span><strong id="endName">-</strong></div>
+        </section>
+
+        <section class="objective-card">
+          <h2>Objective</h2>
+          <p>Click charging stations on the map to build your route. Every leg must be within your car range. Fewer stops and fewer kilometers score better.</p>
+        </section>
+
+        <div class="actions">
+          <button id="newGameBtn" class="primary">New random trip</button>
+          <button id="undoBtn">Undo stop</button>
+          <button id="finishBtn">Finish route</button>
+        </div>
+      </aside>
+
+      <section class="map-panel">
+        <div class="hud">
+          <div><span>Direct distance</span><strong id="directDistance">-</strong></div>
+          <div><span>Route distance</span><strong id="routeDistance">0 km</strong></div>
+          <div><span>Stops</span><strong id="stopCount">0</strong></div>
+          <div><span>Status</span><strong id="routeStatus">Plan route</strong></div>
+        </div>
+        <div id="map"></div>
+      </section>
+
+      <aside class="panel route-panel">
+        <p class="eyebrow">Route planner</p>
+        <h2>Your route</h2>
+        <ol id="routeList" class="route-list"></ol>
+
+        <section class="score-card">
+          <h3>Score</h3>
+          <div id="scoreValue" class="score">-</div>
+          <p id="scoreText">Finish a valid route to score.</p>
+        </section>
+
+        <section class="hint-card">
+          <h3>Possible first stops</h3>
+          <div id="hints"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+  </body>
+</html>
